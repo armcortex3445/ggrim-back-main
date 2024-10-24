@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerModule } from 'src/Logger/logger.module';
 import { TraceInterceptor } from './interceptor/trace.interceptor';
 import { HttpLoggingInterceptor } from './interceptor/logging.interceptor';
+import { ServiceExceptionFilter } from './filter/service.exception.filter';
 
 @Module({
   imports: [LoggerModule],
@@ -14,6 +15,10 @@ import { HttpLoggingInterceptor } from './interceptor/logging.interceptor';
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpLoggingInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ServiceExceptionFilter,
     },
   ],
 })
