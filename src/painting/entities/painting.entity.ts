@@ -13,7 +13,7 @@ export class Painting {
   title: string;
 
   @OneToOne(() => WikiArtPainting, {
-    cascade: ['update'],
+    cascade: ['update', 'insert'],
     eager: true,
   })
   @JoinColumn()
