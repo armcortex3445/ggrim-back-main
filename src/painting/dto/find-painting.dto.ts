@@ -5,13 +5,9 @@ import { isTryStatement } from 'typescript';
 
 export class FindPaintingDTO {
   @IsString()
-  title: string;
+  wikiArtID: string;
 
   @IsOptional()
   @IsString()
   id: string;
-
-  @IsOptional()
-  @IsString()
-  wikiArtID: string;
 }

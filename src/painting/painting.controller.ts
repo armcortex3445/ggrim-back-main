@@ -23,6 +23,7 @@ import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm';
 import { CreateArtistDto } from 'src/artist/dto/create-artist.dto';
 import { FindPaintingDTO } from './dto/find-painting.dto';
 import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
+import { SearchPaintingDTO } from './dto/search-painting.dto';
 
 @Crud({
   model: {
@@ -34,16 +35,24 @@ import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
 export class PaintingController implements CrudController<Painting> {
   constructor(public service: PaintingService) {}
 
+  @Get('search')
+  async searchPainting(
+    @Query() dto: SearchPaintingDTO,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+  ) {
+    return this.service.searchPainting(dto, page);
+  }
   @Get()
-  async findPainting(@Query() query: FindPaintingDTO, @Query('page') page: number) {
-    Logger.debug(`Is Query from FindPaintingDTO? : ${query instanceof FindPaintingDTO}`);
-
+  async findPainting(@Query() query: FindPaintingDTO) {
     if (query.id) {
+      Logger.debug('find entity with id :' + query.id);
       const ret: IResult<Painting> = {
-        data: await this.service.findOneBy({ id: query.id }),
+        data: await this.service.findOneById(query.id),
       };
+
+      return ret;
     }
-    return this.service.findPaintingByTitle(query.title, query.wikiArtID, page || 0);
+    return this.service.findPainting(query.wikiArtID);
   }
 
   @Post()
@@ -52,7 +61,13 @@ export class PaintingController implements CrudController<Painting> {
     return this.service.create(body);
   }
 
-  @Patch(':id/wikiArt')
+  //related to wiki-art
+  @Get(':id/wiki-art')
+  async findWikiArtInfo(@Param('id') id: string) {
+    return this.service.getwikiArtInfo(id);
+  }
+
+  @Patch(':id/wiki-art')
   updateWikiArtInfo(@Param('id') id: string, @Body() updateWikiArtInfo: UpdateWikiArtInfoDTO) {
     return this.service.updateWikiArt(id, updateWikiArtInfo);
   }

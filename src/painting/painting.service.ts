@@ -11,11 +11,16 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { WikiArtPainting } from './entities/wikiArt-painting.entity';
 import { Artist } from 'src/artist/entities/artist.entity';
 import { wikiArtArtist } from 'src/artist/entities/wikiArt-artist.entity';
+import { SearchPaintingDTO } from './dto/search-painting.dto';
 
-export interface IResult<T> {
-  data: T | T[];
-  pagination?: number;
+export interface IPaginationResult<T> {
+  data: T[];
+  count: number;
+  pagination: number;
   isMore?: boolean;
+}
+export interface IResult<T> {
+  data: T;
 }
 
 export interface UpdateInfo {
@@ -58,46 +63,59 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     return `This action removes a #${id} painting`;
   }
 
-  async findPaintingByTitle(title: string, wikiArtID: string, page: number = 0) {
-    let data: Painting[] | Painting = null;
-    let isMore = false;
-    let pagination = page;
-    const maxFindRows = 60;
-    const maxRows = 40;
+  findOneById(id: string) {
+    return this.repo
+      .createQueryBuilder('painting')
+      .innerJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
+      .where('painting.id = :id ', { id })
+      .getOne();
+  }
 
+  async findPainting(wikiArtID: string) {
+    let data: Painting = null;
     const ret: IResult<Painting> = { data: null };
 
-    if (wikiArtID) {
-      data = await this.repo
-        .createQueryBuilder('painting')
-        .innerJoinAndSelect(
-          'painting.wikiArtPainting',
-          'wikiArtPainting',
-          'wikiArtPainting.id = : wikiArtID',
-          { wikiArtID },
-        )
-        .where('painting.title = :title ', { title })
-        .getMany();
+    data = await this.repo
+      .createQueryBuilder('painting')
+      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
+      .where('wikiArtPainting.wikiArtId = :wikiArtID', { wikiArtID })
+      .getOne();
 
-      if (isArray(data)) throw new Error('DB has inconsistency. need to handle it');
-      ret.data = null;
-    } else {
-      data = await this.repo
-        .createQueryBuilder('painting')
-        .select()
-        .where('painting.title = :title ', { title })
-        .skip(page)
-        .take(maxFindRows)
-        .getMany();
-
-      isMore = maxRows < data.length;
-      data = data.slice(0, maxRows);
-      ret.data = data;
-      ret.isMore = isMore;
-      ret.pagination = pagination;
-    }
+    ret.data = data;
 
     return ret;
+  }
+
+  async searchPainting(dto: SearchPaintingDTO, page: number) {
+    const maxCnt = 50;
+
+    const result = await this.repo
+      .createQueryBuilder('painting')
+      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
+      .where("painting.title like '%' || :title || '%'", { title: dto.title })
+      .andWhere("wikiArtPainting.artistName like '%' || :artist || '%'", {
+        artist: dto.artistName || '',
+      })
+      .skip(page * maxCnt)
+      .take(maxCnt)
+      .getMany();
+
+    const ret: IPaginationResult<Painting> = {
+      data: result,
+      isMore: result.length === maxCnt,
+      count: result.length,
+      pagination: page,
+    };
+    return ret;
+  }
+
+  //wikiArt functions
+  async getwikiArtInfo(id: string) {
+    const ret: IResult<WikiArtPainting> = { data: null };
+
+    const entity = await this.findOneById(id);
+
+    return entity.wikiArtPainting;
   }
 
   async updateWikiArt(id: string, dto: UpdateWikiArtInfoDTO) {
@@ -112,7 +130,7 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     밑에 로직이랑 해당 로직이란 무슨차이인가?
     */
     const updatedEntity = await this.repo.preload(partialEntity);
-    Logger.debug(`${JSON.stringify(partialEntity, null, 2)}`);
+    Logger.debug(`[updateWikiArt] partialEntity : ${JSON.stringify(partialEntity, null, 2)}`);
 
     await this.repo.save(updatedEntity);
 
