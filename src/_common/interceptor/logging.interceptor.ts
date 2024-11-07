@@ -17,7 +17,7 @@ interface HttpInfo {
 export class HttpLoggingInterceptor implements NestInterceptor {
   className = 'HttpLoggingInterceptor';
 
-  isProduction = process.env['NODE_ENV'] === 'production';
+  isProduction = !process.env[NODE_ENV];
   constructor(
     private readonly logger: LoggerService,
     private moduleRef: ModuleRef,

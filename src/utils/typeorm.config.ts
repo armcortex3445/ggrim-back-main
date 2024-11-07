@@ -22,7 +22,7 @@ export class TypeormConfig implements TypeOrmOptionsFactory {
       password: process.env[ENV_DB_PASSWORD_KEY],
       database: process.env[ENV_DB_DATABASE_KEY],
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: !process.env[NODE_ENV] ? false : true,
       keepConnectionAlive: true,
       logging: ['error', 'log'],
       logger: 'file',
