@@ -7,8 +7,8 @@ import {
   ENV_DB_PASSWORD_KEY,
   ENV_DB_PORT_KEY,
   ENV_DB_USER_NAME_KEY,
-} from 'src/_common/const/env-keys.const';
-import { WikiArtPainting } from 'src/painting/entities/wikiArt-painting.entity';
+  NODE_ENV,
+} from '../_common/const/env-keys.const';
 
 @Injectable()
 export class TypeormConfig implements TypeOrmOptionsFactory {

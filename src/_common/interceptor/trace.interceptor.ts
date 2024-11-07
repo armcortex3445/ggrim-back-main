@@ -10,8 +10,8 @@ import { trace } from 'console';
 import { Request } from 'express';
 import { ClsService } from 'nestjs-cls';
 import { Observable, catchError } from 'rxjs';
-import { LoggerService } from 'src/Logger/logger.service';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerService } from '../../Logger/logger.service';
 @Injectable()
 export class TraceInterceptor implements NestInterceptor {
   className = `TraceInterceptor`;

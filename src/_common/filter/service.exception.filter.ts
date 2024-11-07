@@ -4,7 +4,6 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import { BaseException } from './exception/base.exception';
 import { ServiceException } from './exception/service/service-exception';
 import { CustomExceptionFilter } from './custom.exception.filter';
-import { LoggerService } from 'src/Logger/logger.service';
 import { ServiceExceptionEnum } from './exception/service/service.exception.enum';
 
 interface IExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
