@@ -23,7 +23,7 @@ export class TestService {
 
   public async closeTest() {
     console.log(`close test`);
-    this.closeDbConnection();
+    await this.closeDbConnection();
     console.log(`close test done`);
   }
   public async cleanAll() {
