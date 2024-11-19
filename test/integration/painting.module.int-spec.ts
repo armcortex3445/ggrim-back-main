@@ -12,6 +12,7 @@ import { createConnection } from 'net';
 import { PaintingModule } from '../../src/painting/painting.module';
 import { TestService } from '../_shared/test.service';
 import { TestModule } from '../_shared/test.module';
+import { SearchPaintingDTO } from '../../src/painting/dto/search-painting.dto';
 
 describe('PaintingModule Integration Test', () => {
   let module: TestingModule;
@@ -37,17 +38,12 @@ describe('PaintingModule Integration Test', () => {
     expect(paintingService).toBeDefined();
   });
 
-  it('should success create', () => {
+  it('should success create', async () => {
     const dto: CreatePaintingDto = {
       title: 'unit-test',
     };
-    paintingService.create(dto);
-  });
+    const result = await paintingService.create(dto);
 
-  it('should success create', () => {
-    const dto: CreatePaintingDto = {
-      title: 'unit-test',
-    };
-    paintingService.create(dto);
+    expect(result).toBeTruthy();
   });
 });
