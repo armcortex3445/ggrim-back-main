@@ -6,7 +6,6 @@ import {
   OneToOne,
   ManyToOne,
 } from 'typeorm';
-import { wikiArtArtist } from 'src/artist/entities/wikiArt-artist.entity';
 import { IsArray, IsNumber, IsString, ValidateIf } from 'class-validator';
 import { Painting } from './painting.entity';
 @Entity()

@@ -20,7 +20,6 @@ import { UpdatePaintingDto } from './dto/update-painting.dto';
 import { Crud, CrudController } from '@dataui/crud';
 import { Painting } from './entities/painting.entity';
 import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm';
-import { CreateArtistDto } from 'src/artist/dto/create-artist.dto';
 import { FindPaintingDTO } from './dto/find-painting.dto';
 import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';

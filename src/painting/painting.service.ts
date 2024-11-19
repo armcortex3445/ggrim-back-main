@@ -9,8 +9,6 @@ import { isArray } from 'class-validator';
 import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { WikiArtPainting } from './entities/wikiArt-painting.entity';
-import { Artist } from 'src/artist/entities/artist.entity';
-import { wikiArtArtist } from 'src/artist/entities/wikiArt-artist.entity';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 
 export interface IPaginationResult<T> {
@@ -31,15 +29,12 @@ export interface UpdateInfo {
 @Injectable()
 export class PaintingService extends TypeOrmCrudService<Painting> {
   constructor(
-    @InjectRepository(Painting) repo,
-    @InjectRepository(WikiArtPainting)
-    private readonly wikiArtPaintingRepo: Repository<WikiArtPainting>,
-    @InjectEntityManager() private readonly entityManager: EntityManager,
+    @InjectRepository(Painting) private readonly paintingRepository: Repository<Painting>,
   ) {
-    super(repo);
+    super(paintingRepository);
   }
   async create(createPaintingDto: CreatePaintingDto) {
-    const result = await this.repo
+    const result = await this.paintingRepository
       .createQueryBuilder()
       .insert()
       .into(Painting)
@@ -64,7 +59,7 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
   }
 
   findOneById(id: string) {
-    return this.repo
+    return this.paintingRepository
       .createQueryBuilder('painting')
       .innerJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
       .where('painting.id = :id ', { id })
@@ -75,7 +70,7 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     let data: Painting = null;
     const ret: IResult<Painting> = { data: null };
 
-    data = await this.repo
+    data = await this.paintingRepository
       .createQueryBuilder('painting')
       .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
       .where('wikiArtPainting.wikiArtId = :wikiArtID', { wikiArtID })
@@ -89,7 +84,7 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
   async searchPainting(dto: SearchPaintingDTO, page: number) {
     const maxCnt = 50;
 
-    const result = await this.repo
+    const result = await this.paintingRepository
       .createQueryBuilder('painting')
       .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
       .where("painting.title like '%' || :title || '%'", { title: dto.title })
@@ -129,12 +124,12 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     /*TODO
     밑에 로직이랑 해당 로직이란 무슨차이인가?
     */
-    const updatedEntity = await this.repo.preload(partialEntity);
+    const updatedEntity = await this.paintingRepository.preload(partialEntity);
     Logger.debug(`[updateWikiArt] partialEntity : ${JSON.stringify(partialEntity, null, 2)}`);
 
-    await this.repo.save(updatedEntity);
+    await this.paintingRepository.save(updatedEntity);
 
-    // const painting = await this.repo
+    // const painting = await this.paintingRepository
     //   .createQueryBuilder('painting')
     //   .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArt')
     //   .where('painting.id = :id', { id })

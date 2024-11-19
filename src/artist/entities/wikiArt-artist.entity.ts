@@ -1,5 +1,3 @@
-import { Painting } from 'src/painting/entities/painting.entity';
-import { WikiArtPainting } from 'src/painting/entities/wikiArt-painting.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,6 +6,7 @@ import {
   OneToOne,
   OneToMany,
 } from 'typeorm';
+import { Painting } from '../../painting/entities/painting.entity';
 
 @Entity()
 export class wikiArtArtist {
