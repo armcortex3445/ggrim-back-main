@@ -6,16 +6,16 @@ import { IsNumber, IsString } from 'class-validator';
 export class Painting {
   @PrimaryGeneratedColumn('uuid')
   @IsString()
-  id: string;
+  id: string = '';
 
   @Column()
   @IsString()
-  title: string;
+  title: string = '';
 
   @OneToOne(() => WikiArtPainting, {
     cascade: ['update', 'insert'],
     eager: true,
   })
   @JoinColumn()
-  wikiArtPainting: WikiArtPainting;
+  wikiArtPainting: WikiArtPainting = new WikiArtPainting();
 }
