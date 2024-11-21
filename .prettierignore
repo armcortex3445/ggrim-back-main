@@ -1,1 +1,5 @@
-test/_shared/entity/*.json
+**/*.json
+.husky/**
+.prettierignore
+.prettierrc
+**/*.md
