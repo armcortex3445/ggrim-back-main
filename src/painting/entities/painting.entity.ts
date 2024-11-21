@@ -1,21 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { IsString } from 'class-validator';
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { WikiArtPainting } from './wikiArt-painting.entity';
-import { IsNumber, IsString } from 'class-validator';
 
 @Entity()
 export class Painting {
   @PrimaryGeneratedColumn('uuid')
   @IsString()
-  id: string = '';
+  id!: string;
 
   @Column()
   @IsString()
-  title: string = '';
+  title!: string;
 
   @OneToOne(() => WikiArtPainting, {
     cascade: ['update', 'insert'],
     eager: true,
   })
   @JoinColumn()
-  wikiArtPainting: WikiArtPainting = new WikiArtPainting();
+  wikiArtPainting!: WikiArtPainting;
 }
