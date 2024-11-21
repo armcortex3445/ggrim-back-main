@@ -1,15 +1,14 @@
-import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { CreatePaintingDto } from './dto/create-painting.dto';
-import { UpdatePaintingDto } from './dto/update-painting.dto';
-import { Painting } from './entities/painting.entity';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { FindPaintingDTO } from './dto/find-painting.dto';
-import { isArray } from 'class-validator';
-import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
-import { WikiArtPainting } from './entities/wikiArt-painting.entity';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { CreatePaintingDto } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
+import { UpdatePaintingDto } from './dto/update-painting.dto';
+import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
+import { Painting } from './entities/painting.entity';
+import { WikiArtPainting } from './entities/wikiArt-painting.entity';
 
 export interface IPaginationResult<T> {
   data: T[];
@@ -18,7 +17,7 @@ export interface IPaginationResult<T> {
   isMore?: boolean;
 }
 export interface IResult<T> {
-  data: T;
+  data: T | null | undefined;
 }
 
 export interface UpdateInfo {
@@ -66,23 +65,22 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
       .getOne();
   }
 
-  async findPainting(wikiArtID: string) {
-    let data: Painting = null;
-    const ret: IResult<Painting> = { data: null };
-
-    data = await this.paintingRepository
+  async findPainting(wikiArtID: string): Promise<IResult<Painting>> {
+    const data = await this.paintingRepository
       .createQueryBuilder('painting')
       .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
       .where('wikiArtPainting.wikiArtId = :wikiArtID', { wikiArtID })
       .getOne();
 
-    ret.data = data;
+    const ret: IResult<Painting> = { data: data || new Painting() };
 
     return ret;
   }
 
   async searchPainting(dto: SearchPaintingDTO, page: number) {
     const maxCnt = 50;
+
+    const tags = JSON.parse(dto.tags) as string[];
 
     const result = await this.paintingRepository
       .createQueryBuilder('painting')
@@ -91,6 +89,7 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
       .andWhere("wikiArtPainting.artistName like '%' || :artist || '%'", {
         artist: dto.artistName || '',
       })
+      .andWhere('wikiArtPainting.tags @> :tags', { tags })
       .skip(page * maxCnt)
       .take(maxCnt)
       .getMany();
@@ -104,11 +103,32 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     return ret;
   }
 
+  async searchPaintingWithoutAndWithValue(
+    key: keyof WikiArtPainting,
+    excludedValues: string[],
+    includedValues: string[],
+  ) {
+    const maxCnt = 50;
+
+    const result = await this.paintingRepository
+      .createQueryBuilder('painting')
+      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
+      .where(`NOT (wikiArtPainting.${key} @> :excludedValues)`, { excludedValues })
+      .andWhere(`wikiArtPainting.${key} @> :includedValues`, {
+        includedValues,
+      })
+      .getMany();
+
+    return result;
+  }
+
   //wikiArt functions
   async getwikiArtInfo(id: string) {
-    const ret: IResult<WikiArtPainting> = { data: null };
-
     const entity = await this.findOneById(id);
+
+    if (entity == null) {
+      return null;
+    }
 
     return entity.wikiArtPainting;
   }
@@ -126,6 +146,14 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     */
     const updatedEntity = await this.paintingRepository.preload(partialEntity);
     Logger.debug(`[updateWikiArt] partialEntity : ${JSON.stringify(partialEntity, null, 2)}`);
+
+    if (updatedEntity == undefined) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `id : ${id} ,\n dto  : ${JSON.stringify(dto, null, 2)}`,
+      );
+    }
 
     await this.paintingRepository.save(updatedEntity);
 
