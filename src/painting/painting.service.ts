@@ -1,6 +1,7 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isArray } from 'class-validator';
 import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { CreatePaintingDto } from './dto/create-painting.dto';
@@ -107,23 +108,49 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     key: keyof WikiArtPainting,
     excludedValues: string[],
     includedValues: string[],
-  ) {
-    const maxCnt = 50;
+  ): Promise<Painting[]> {
+    const painting = new WikiArtPainting();
 
-    const result = await this.paintingRepository
+    if (isArray(painting[key])) {
+      const result = await this.paintingRepository
+        .createQueryBuilder('painting')
+        .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
+        .where(`NOT (wikiArtPainting.${key} @> :excludedValues)`, { excludedValues })
+        .andWhere(`wikiArtPainting.${key} @> :includedValues`, {
+          includedValues,
+        })
+        .getMany();
+
+      return result;
+    }
+
+    const queryBuilder = await this.paintingRepository
       .createQueryBuilder('painting')
-      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
-      .where(`NOT (wikiArtPainting.${key} @> :excludedValues)`, { excludedValues })
-      .andWhere(`wikiArtPainting.${key} @> :includedValues`, {
-        includedValues,
-      })
-      .getMany();
+      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting');
 
-    return result;
+    excludedValues
+      .filter((value) => value !== '')
+      .forEach((excludedValue, index) => {
+        queryBuilder.andWhere(`wikiArtPainting.${key} NOT LIKE :excludedValue${index}`, {
+          [`excludedValue${index}`]: `%${excludedValue}%`,
+        });
+      });
+
+    /* TODO
+    - 반환 배열의 개수를 지정해야함.  
+    */
+
+    includedValues.forEach((includedValue, index) => {
+      queryBuilder.andWhere(`wikiArtPainting.${key} LIKE :includedValue${index}`, {
+        [`includedValue${index}`]: `%${includedValue}%`,
+      });
+    });
+
+    return queryBuilder.getMany();
   }
 
   //wikiArt functions
-  async getwikiArtInfo(id: string) {
+  async getWikiArtInfo(id: string) {
     const entity = await this.findOneById(id);
 
     if (entity == null) {

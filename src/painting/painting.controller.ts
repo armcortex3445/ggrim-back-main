@@ -1,28 +1,25 @@
+import { Crud, CrudController } from '@dataui/crud';
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  Logger,
   Param,
-  Delete,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
   UsePipes,
   ValidationPipe,
-  Logger,
-  ParseIntPipe,
-  Query,
-  ParseUUIDPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
-import { IResult, PaintingService } from './painting.service';
 import { CreatePaintingDto } from './dto/create-painting.dto';
-import { UpdatePaintingDto } from './dto/update-painting.dto';
-import { Crud, CrudController } from '@dataui/crud';
-import { Painting } from './entities/painting.entity';
-import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm';
 import { FindPaintingDTO } from './dto/find-painting.dto';
-import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
+import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
+import { Painting } from './entities/painting.entity';
+import { WikiArtPainting } from './entities/wikiArt-painting.entity';
+import { IResult, PaintingService } from './painting.service';
 
 @Crud({
   model: {
@@ -41,6 +38,20 @@ export class PaintingController implements CrudController<Painting> {
   ) {
     return this.service.searchPainting(dto, page);
   }
+
+  @Get('search/:key')
+  async searchPaintingWithKey(
+    @Param('key') key: string,
+    @Query('exclusion') exclusion: string,
+    @Query('inclusion') inclusion: string,
+  ) {
+    return this.service.searchPaintingWithoutAndWithValue(
+      key as keyof WikiArtPainting,
+      JSON.parse(exclusion) as string[],
+      JSON.parse(inclusion) as string[],
+    );
+  }
+
   @Get()
   async findPainting(@Query() query: FindPaintingDTO) {
     if (query.id) {
@@ -63,7 +74,7 @@ export class PaintingController implements CrudController<Painting> {
   //related to wiki-art
   @Get(':id/wiki-art')
   async findWikiArtInfo(@Param('id') id: string) {
-    return this.service.getwikiArtInfo(id);
+    return this.service.getWikiArtInfo(id);
   }
 
   @Patch(':id/wiki-art')
