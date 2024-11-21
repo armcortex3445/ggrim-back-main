@@ -1,5 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { HttpException, HttpExceptionOptions } from '@nestjs/common/exceptions';
+import { TYPE_DEFAULT_VALUE } from '../../const/default.value';
 
 interface IBaseException {
   errorCode: number;
@@ -11,7 +12,7 @@ interface IBaseException {
 export type HttpStatusType = keyof typeof HttpStatus;
 
 export class BaseException extends HttpException implements IBaseException {
-  traceId: string;
+  traceId: string = TYPE_DEFAULT_VALUE.string;
   constructor(
     errorCode: number,
     status: number,
@@ -29,9 +30,9 @@ export class BaseException extends HttpException implements IBaseException {
 
   errorCode: number;
 
-  timestamp: string;
+  timestamp: string = TYPE_DEFAULT_VALUE.string;
 
   msg: string;
 
-  path: string;
+  path: string = TYPE_DEFAULT_VALUE.string;
 }

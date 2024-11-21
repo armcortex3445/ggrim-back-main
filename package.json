@@ -49,6 +49,7 @@
     "@types/jest": "^29.5.2",
     "@types/node": "^20.16.11",
     "@types/supertest": "^6.0.0",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.57.1",
@@ -87,9 +88,9 @@
     }
   },
   "lint-staged": {
-    "*.ts": "eslint --fix",  
-    "*.js": "eslint --fix",  
-    "*.jsx": "eslint --fix", 
-    "*.tsx": "eslint --fix" 
+    "*.ts": "eslint --fix",
+    "*.js": "eslint --fix",
+    "*.jsx": "eslint --fix",
+    "*.tsx": "eslint --fix"
   }
 }

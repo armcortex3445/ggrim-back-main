@@ -1,8 +1,7 @@
-import { Catch, Inject, Injectable } from '@nestjs/common/decorators';
-import { ArgumentsHost, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
+import { ArgumentsHost, ExceptionFilter, HttpStatus, Inject } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { BaseException } from './exception/base.exception';
 import { LoggerService } from '../../Logger/logger.service';
+import { BaseException } from './exception/base.exception';
 
 interface CauseInfo {
   innerError: unknown;
@@ -17,7 +16,8 @@ interface IExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
 export class CustomExceptionFilter implements ExceptionFilter {
   static cnt = 0;
   className: string;
-  logger: LoggerService;
+  @Inject(LoggerService)
+  logger!: LoggerService;
   constructor(className: string) {
     this.className = className;
   }
@@ -64,7 +64,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
     };
 
     if (exception.getStatus() >= HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(JSON.stringify(info, null, 2), exception.stack, {
+      this.logger.error(JSON.stringify(info, null, 2), exception.stack || '', {
         className: this.className,
         traceId: exception.traceId,
       });

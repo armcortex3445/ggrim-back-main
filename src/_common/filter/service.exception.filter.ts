@@ -1,9 +1,7 @@
-import { Inject, Catch, ArgumentsHost, HttpStatus } from '@nestjs/common';
-import { ExceptionFilter } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
+import { ArgumentsHost, Catch } from '@nestjs/common';
+import { CustomExceptionFilter } from './custom.exception.filter';
 import { BaseException } from './exception/base.exception';
 import { ServiceException } from './exception/service/service-exception';
-import { CustomExceptionFilter } from './custom.exception.filter';
 import { ServiceExceptionEnum } from './exception/service/service.exception.enum';
 
 interface IExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
@@ -24,7 +22,7 @@ export class ServiceExceptionFilter extends CustomExceptionFilter {
 
     if (code == ServiceExceptionEnum.DB_INCONSISTENCY) {
       // notfiy to Developer.
-      this.logger.error('DB has inconsistency', exception.stack, {
+      this.logger.error('DB has inconsistency', exception.stack || '', {
         className: this.className,
         traceId: exception.traceId,
       });

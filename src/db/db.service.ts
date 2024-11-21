@@ -1,6 +1,5 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Connection, DataSource, Repository } from 'typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { DataSource, ObjectLiteral, Repository } from 'typeorm';
 
 export interface IEnitity {
   name: string;
@@ -12,7 +11,7 @@ export class DatabaseService {
   constructor(private readonly dataSource: DataSource) {
     Logger.log(`[${DatabaseService.name}] init`);
   }
-  public async getRepository<T>(entity: any): Promise<Repository<T>> {
+  public async getRepository<T extends ObjectLiteral>(entity: any): Promise<Repository<T>> {
     return this.dataSource.getRepository(entity);
   }
 
@@ -21,7 +20,7 @@ export class DatabaseService {
   }
 
   public async close(): Promise<void> {
-    if (this.isConnected) {
+    if (await this.isConnected()) {
       this.dataSource.destroy();
     }
   }

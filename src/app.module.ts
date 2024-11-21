@@ -1,17 +1,17 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ClsModule } from 'nestjs-cls';
+import { DataSource } from 'typeorm';
+import { LoggerModule } from './Logger/logger.module';
+import { CommonModule } from './_common/common.module';
+import { NODE_ENV } from './_common/const/env-keys.const';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PaintingModule } from './painting/painting.module';
 import { ArtistModule } from './artist/artist.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { TypeormConfig } from './utils/typeorm.config';
-import { DataSource, DataSourceOptions } from 'typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { LoggerModule } from './Logger/logger.module';
-import { ClsModule } from 'nestjs-cls';
-import { CommonModule } from './_common/common.module';
+import { PaintingModule } from './painting/painting.module';
 import { QuizModule } from './quiz/quiz.module';
-import { NODE_ENV } from './_common/const/env-keys.const';
+import { TypeormConfig } from './utils/typeorm.config';
 
 const ENV = process.env[NODE_ENV];
 
@@ -22,7 +22,7 @@ const ENV = process.env[NODE_ENV];
     }),
     TypeOrmModule.forRootAsync({
       useClass: TypeormConfig,
-      dataSourceFactory: async (options: DataSourceOptions) => new DataSource(options).initialize(),
+      dataSourceFactory: async (options) => new DataSource(options!).initialize(),
     }),
     ClsModule.forRoot({
       global: true,

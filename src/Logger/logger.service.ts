@@ -1,5 +1,6 @@
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ClsService } from 'nestjs-cls';
+import { TYPE_DEFAULT_VALUE } from '../_common/const/default.value';
 
 export interface ILogContext {
   className: string;
@@ -12,7 +13,7 @@ export class LoggerService {
     traceReq: 'traceId',
   };
 
-  private _traceId: string;
+  private _traceId: string = TYPE_DEFAULT_VALUE.string;
   constructor(
     private readonly logger: Logger,
     private readonly clsService: ClsService,

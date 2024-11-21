@@ -1,13 +1,11 @@
-import { PickType } from '@nestjs/mapped-types';
 import { IsOptional, IsString } from 'class-validator';
-import { Painting } from '../entities/painting.entity';
-import { isTryStatement } from 'typescript';
+import { TYPE_DEFAULT_VALUE } from '../../_common/const/default.value';
 
 export class FindPaintingDTO {
   @IsString()
-  wikiArtID: string;
+  wikiArtID: string = TYPE_DEFAULT_VALUE.string;
 
   @IsOptional()
   @IsString()
-  id: string;
+  id: string = TYPE_DEFAULT_VALUE.string;
 }

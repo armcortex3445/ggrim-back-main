@@ -1,6 +1,5 @@
-import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import {
   ENV_DB_DATABASE_KEY,
   ENV_DB_HOST_KEY,
@@ -17,7 +16,7 @@ export class TypeormConfig implements TypeOrmOptionsFactory {
       type: 'postgres',
       url: '',
       host: process.env[ENV_DB_HOST_KEY],
-      port: +process.env[ENV_DB_PORT_KEY],
+      port: +(process.env[ENV_DB_PORT_KEY] || ''),
       username: process.env[ENV_DB_USER_NAME_KEY],
       password: process.env[ENV_DB_PASSWORD_KEY],
       database: process.env[ENV_DB_DATABASE_KEY],
