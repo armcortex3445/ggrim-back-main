@@ -5,3 +5,7 @@ export function isStringArray(obj: unknown): obj is string[] {
 export function isNotFalsy<T>(obj: T | null | undefined): obj is T {
   return obj !== null && obj !== undefined;
 }
+
+export function isArrayEmpty<T>(list: T[]): boolean {
+  return list.length === 0;
+}
