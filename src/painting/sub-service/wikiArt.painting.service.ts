@@ -20,9 +20,9 @@ export class WikiArtPaintingService {
       `[WikiArtPaintingService] start init!!` + `key list : ${JSON.stringify(keys, null, 2)}`,
     );
     keys.forEach((key) => {
-      const entitykey = key as keyof WikiArtPainting;
-      if (!this.mapColumnsValueSet.has(entitykey)) {
-        this.mapColumnsValueSet.set(entitykey, new Set<WikiArtPainting[typeof entitykey]>());
+      const entityKey = key as keyof WikiArtPainting;
+      if (!this.mapColumnsValueSet.has(entityKey)) {
+        this.mapColumnsValueSet.set(entityKey, new Set<WikiArtPainting[typeof entityKey]>());
       }
     });
   }
