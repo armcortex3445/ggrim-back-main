@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isArray } from 'class-validator';
 import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { isArrayEmpty } from '../utils/validator';
 import { CreatePaintingDto } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { UpdatePaintingDto } from './dto/update-painting.dto';
@@ -111,6 +112,12 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
   ): Promise<Painting[]> {
     const painting = new WikiArtPainting();
 
+    excludedValues = excludedValues.filter((value) => value !== '');
+    if (isArrayEmpty(excludedValues)) {
+      const dumpString = 'n1e1ve1e1r^Co1n1ta1i1ned';
+      excludedValues = [dumpString];
+    }
+
     if (isArray(painting[key])) {
       const result = await this.paintingRepository
         .createQueryBuilder('painting')
@@ -128,13 +135,11 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
       .createQueryBuilder('painting')
       .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting');
 
-    excludedValues
-      .filter((value) => value !== '')
-      .forEach((excludedValue, index) => {
-        queryBuilder.andWhere(`wikiArtPainting.${key} NOT LIKE :excludedValue${index}`, {
-          [`excludedValue${index}`]: `%${excludedValue}%`,
-        });
+    excludedValues.forEach((excludedValue, index) => {
+      queryBuilder.andWhere(`wikiArtPainting.${key} NOT LIKE :excludedValue${index}`, {
+        [`excludedValue${index}`]: `%${excludedValue}%`,
       });
+    });
 
     /* TODO
     - 반환 배열의 개수를 지정해야함.  
