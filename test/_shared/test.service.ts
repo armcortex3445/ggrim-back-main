@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService, IEnitity } from '../../src/db/db.service';
+import { DatabaseService, IEntity } from '../../src/db/db.service';
 
 import * as fs from 'fs';
 import * as Path from 'path';
 import { ServiceException } from '../../src/_common/filter/exception/service/service-exception';
-import { LoggerService } from '../../src/Logger/logger.service';
 
 @Injectable()
 export class TestService {
@@ -55,14 +54,17 @@ export class TestService {
     }
   }
 
-  private async cleanEntity(entities: IEnitity[]) {
+  private async cleanEntity(entities: IEntity[]) {
     try {
       for (const entity of entities) {
         try {
           const repository = await this.databaseService.getRepository(entity.name);
           await repository.query(`truncate  table  ${entity.tableName} CASCADE`);
         } catch (err) {
-          Logger.error(`entity : ` + JSON.stringify(entity) + JSON.stringify(err), err.stack);
+          Logger.error(
+            `entity : ` + JSON.stringify(entity) + JSON.stringify(err),
+            (err as Error).stack,
+          );
           throw new ServiceException(
             'EXTERNAL_SERVICE_FAILED',
             'INTERNAL_SERVER_ERROR',
@@ -81,7 +83,7 @@ export class TestService {
     }
   }
 
-  private async loadEntity(entities: IEnitity[]) {
+  private async loadEntity(entities: IEntity[]) {
     try {
       for (const entity of entities) {
         const repository = await this.databaseService.getRepository(entity.name);

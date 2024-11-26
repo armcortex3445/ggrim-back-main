@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource, ObjectLiteral, Repository } from 'typeorm';
 
-export interface IEnitity {
+export interface IEntity {
   name: string;
   tableName: string;
 }
@@ -26,7 +26,7 @@ export class DatabaseService {
   }
 
   public async getEntities() {
-    const entities: IEnitity[] = [];
+    const entities: IEntity[] = [];
     this.dataSource.entityMetadatas.forEach((x) =>
       entities.push({ name: x.name, tableName: x.tableName }),
     );
