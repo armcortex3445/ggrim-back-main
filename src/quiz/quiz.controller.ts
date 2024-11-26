@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { CreateQuizDto } from './dto/create-quiz.dto';
-import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { CreateQuizDTO } from './dto/create-quiz.dto';
+import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { QuizService } from './quiz.service';
 
 @Controller('quiz')
@@ -8,7 +8,7 @@ export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post()
-  create(@Body() createQuizDto: CreateQuizDto) {
+  create(@Body() createQuizDto: CreateQuizDTO) {
     return this.quizService.create(createQuizDto);
   }
 
@@ -58,7 +58,7 @@ export class QuizController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto) {
+  update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDTO) {
     return this.quizService.update(+id, updateQuizDto);
   }
 
