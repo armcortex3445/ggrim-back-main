@@ -11,7 +11,7 @@ import { AppService } from './app.service';
 import { ArtistModule } from './artist/artist.module';
 import { PaintingModule } from './painting/painting.module';
 import { QuizModule } from './quiz/quiz.module';
-import { TypeormConfig } from './utils/typeorm.config';
+import { TypeORMConfig } from './utils/typeorm.config';
 
 const ENV = process.env[NODE_ENV];
 
@@ -21,7 +21,7 @@ const ENV = process.env[NODE_ENV];
       envFilePath: !ENV ? '.env' : `.env.${ENV}`,
     }),
     TypeOrmModule.forRootAsync({
-      useClass: TypeormConfig,
+      useClass: TypeORMConfig,
       dataSourceFactory: async (options) => new DataSource(options!).initialize(),
     }),
     ClsModule.forRoot({
