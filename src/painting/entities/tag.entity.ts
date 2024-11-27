@@ -1,9 +1,10 @@
 import { IsString } from 'class-validator';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
 import { Painting } from './painting.entity';
 
 @Entity()
+@Unique(['name'])
 export class Tag extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   @IsString()
