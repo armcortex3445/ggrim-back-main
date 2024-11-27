@@ -5,10 +5,13 @@ import {
   JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Artist } from '../../artist/entities/artist.entity';
 import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
+import { Style } from './style.entity';
 import { Tag } from './tag.entity';
 import { WikiArtPainting } from './wikiArt-painting.entity';
 
@@ -54,4 +57,11 @@ export class Painting extends CustomBaseEntity {
   @ManyToMany(() => Tag, (tag) => tag.paintings)
   @JoinTable()
   tags!: Tag[];
+
+  @ManyToMany(() => Style, (style) => style.paintings)
+  @JoinTable()
+  styles!: Style[];
+
+  @ManyToOne(() => Artist, (artist) => artist.paintings)
+  artist!: Artist;
 }
