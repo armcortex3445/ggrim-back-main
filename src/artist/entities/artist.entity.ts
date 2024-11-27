@@ -43,7 +43,9 @@ export class Artist extends CustomBaseEntity {
   @IsUrl()
   info_url!: string;
 
-  @OneToMany(() => Painting, (painting) => painting.artist)
+  @OneToMany(() => Painting, (painting) => painting.artist, {
+    onDelete: 'RESTRICT',
+  })
   @JoinColumn()
   paintings!: Painting[];
 }
