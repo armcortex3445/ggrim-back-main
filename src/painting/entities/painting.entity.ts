@@ -51,7 +51,7 @@ export class Painting extends CustomBaseEntity {
   @IsNumber()
   height!: number;
 
-  @ManyToMany(() => Tag, (photo) => photo.paintings)
+  @ManyToMany(() => Tag, (tag) => tag.paintings)
   @JoinTable()
   tags!: Tag[];
 }
