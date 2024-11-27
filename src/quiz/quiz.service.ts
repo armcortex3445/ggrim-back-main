@@ -5,9 +5,9 @@ import { PaintingService } from '../painting/painting.service';
 import { WikiArtPaintingService } from '../painting/sub-service/wikiArt.painting.service';
 import { extractValuesFromArray } from '../utils/extractor';
 import { getRandomElement, getRandomNumber } from '../utils/random';
-import { CreateQuizDto } from './dto/create-quiz.dto';
+import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizDTO } from './dto/quiz.dto';
-import { UpdateQuizDto } from './dto/update-quiz.dto';
+import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { QUIZ_CONSTANT } from './entities/quiz.entity';
 import { QuizCategory } from './type';
 
@@ -18,7 +18,7 @@ export class QuizService {
     @Inject(PaintingService) private readonly paintingService: PaintingService,
   ) {}
 
-  create(createQuizDto: CreateQuizDto) {
+  create(createQuizDto: CreateQuizDTO) {
     return 'This action adds a new quiz';
   }
 
@@ -30,7 +30,7 @@ export class QuizService {
     return `This action returns a #${id} quiz`;
   }
 
-  update(id: number, updateQuizDto: UpdateQuizDto) {
+  update(id: number, updateQuizDto: UpdateQuizDTO) {
     return `This action updates a #${id} quiz`;
   }
 
