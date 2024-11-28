@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { CreatePaintingDto } from '../../src/painting/dto/create-painting.dto';
+import { CreatePaintingDTO } from '../../src/painting/dto/create-painting.dto';
 import { PaintingModule } from '../../src/painting/painting.module';
 import { PaintingService } from '../../src/painting/painting.service';
 import { TestModule } from '../_shared/test.module';
@@ -30,8 +30,10 @@ describe('PaintingModule Integration Test', () => {
   });
 
   it('should success create', async () => {
-    const dto: CreatePaintingDto = {
+    const dto: CreatePaintingDTO = {
       title: 'unit-test',
+      image_url: 'test',
+      description: 'test',
     };
     const result = await paintingService.create(dto);
 

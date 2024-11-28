@@ -13,7 +13,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { CreatePaintingDto } from './dto/create-painting.dto';
+import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { FindPaintingDTO } from './dto/find-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
@@ -66,7 +66,7 @@ export class PaintingController implements CrudController<Painting> {
   }
 
   @Post()
-  createPainting(@Body() body: CreatePaintingDto) {
+  createPainting(@Body() body: CreatePaintingDTO) {
     Logger.debug(`[createPainting] ${JSON.stringify(body)}`);
     return this.service.create(body);
   }
