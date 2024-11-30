@@ -36,7 +36,17 @@ export class PaintingController implements CrudController<Painting> {
     @Query() dto: SearchPaintingDTO,
     @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
   ) {
-    return this.service.searchPainting(dto, page);
+    const paginationCount = 50;
+    const data: Painting[] = await this.service.searchPainting(dto, page, paginationCount);
+
+    const ret: IPaginationResult<Painting> = {
+      data,
+      isMore: data.length === paginationCount,
+      count: data.length,
+      pagination: page,
+    };
+
+    return ret;
   }
 
   @Get('search/:key')
