@@ -1,5 +1,5 @@
 import { IsDate, IsString, IsUrl } from 'class-validator';
-import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
 import { Painting } from '../../painting/entities/painting.entity';
 
@@ -46,6 +46,5 @@ export class Artist extends CustomBaseEntity {
   @OneToMany(() => Painting, (painting) => painting.artist, {
     onDelete: 'RESTRICT',
   })
-  @JoinColumn()
   paintings!: Painting[];
 }

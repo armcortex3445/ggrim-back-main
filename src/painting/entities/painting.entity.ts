@@ -65,5 +65,6 @@ export class Painting extends CustomBaseEntity {
   @ManyToOne(() => Artist, (artist) => artist.paintings, {
     onDelete: 'RESTRICT',
   })
+  @JoinColumn()
   artist!: Artist;
 }
