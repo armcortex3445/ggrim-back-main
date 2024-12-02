@@ -1,37 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { CreateQuizDTO } from './dto/create-quiz.dto';
-import { UpdateQuizDTO } from './dto/update-quiz.dto';
+import { Controller, Get, Param } from '@nestjs/common';
 import { QuizService } from './quiz.service';
+import { QuizCategory } from './type';
 
 @Controller('quiz')
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
-  @Post()
-  create(@Body() createQuizDto: CreateQuizDTO) {
-    return this.quizService.create(createQuizDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.quizService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.quizService.findOne(+id);
-  }
-
-  @Get('category/tags')
-  async getQuizTags() {
-    const result = await this.quizService.getCategoryValues('tags');
-    return result;
-  }
-
-  @Get('category/artist')
-  async getQuizArtist() {
-    const result = await this.quizService.getCategoryValues('artistName');
-    return result;
+  @Get('category/:key')
+  async getQuizTags(@Param('key') key: string) {
+    const map = await this.quizService.getCategoryValueMap(key as QuizCategory);
+    return [...map.values()];
   }
 
   /*TODO
@@ -47,23 +25,23 @@ export class QuizController {
   /*TODO
   - restFul APi 기반으로 구현하기 
   */
-  @Get('tags/:keyword')
-  async getNewQuizByTag(@Param('keyword') keyword: string) {
-    return this.quizService.createQuizDTO('tags', keyword);
-  }
+  // @Get('tags/:keyword')
+  // async getNewQuizByTag(@Param('keyword') keyword: string) {
+  //   return this.quizService.createQuizDTO('tags', keyword);
+  // }
 
   @Get('artist/:keyword')
-  async getNewQuizByArtistName(@Param('keyword') keyword: string) {
-    return this.quizService.createQuizDTO('artistName', keyword);
+  async generateQuiz(@Param('keyword') keyword: string) {
+    return this.quizService.generateQuizByValue('artist', keyword);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDTO) {
-    return this.quizService.update(+id, updateQuizDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDTO) {
+  //   return this.quizService.update(+id, updateQuizDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.quizService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.quizService.remove(+id);
+  // }
 }

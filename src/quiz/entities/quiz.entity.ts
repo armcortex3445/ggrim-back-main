@@ -19,7 +19,7 @@ export class Quiz {
 
   @Column()
   @IsString()
-  category: QuizCategory = 'artistName';
+  category: QuizCategory = 'artist';
 
   @ManyToMany(() => Painting, {
     cascade: ['update', 'insert'],
