@@ -1,7 +1,6 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { isArray } from 'class-validator';
 import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { ArtistService } from '../artist/artist.service';
@@ -9,11 +8,9 @@ import { Artist } from '../artist/entities/artist.entity';
 import { isArrayEmpty, isNotFalsy } from '../utils/validator';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
-import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
 import { Painting } from './entities/painting.entity';
 import { Style } from './entities/style.entity';
 import { Tag } from './entities/tag.entity';
-import { WikiArtPainting } from './entities/wikiArt-painting.entity';
 import { StyleService } from './sub-service/style.service';
 import { TagService } from './sub-service/tag.service';
 
@@ -186,35 +183,29 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
 
     return result;
   }
-  async searchPaintingByTitleAndArtist(
-    title: string,
-    artistName: string,
-    page: number,
-    paginationCount: number,
-  ) {
+  async getPaintingsByArtist(artistName: string) {
     const result = await this.repo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.artist', 'artist')
-      .leftJoinAndSelect('p.tags', 'tag')
-      .where("p.title like '%' || :title || '%'", { title })
-      .andWhere("artist.name like '%' || :artist || '%'", {
+      .innerJoinAndSelect('p.artist', 'artist')
+      .innerJoinAndSelect('p.tags', 'tag')
+      .innerJoinAndSelect('p.styles', 'style')
+      .where('artist.name  = :artist', {
         artist: artistName,
       })
-      .skip(page * paginationCount)
-      .take(paginationCount)
-      .printSql()
       .getMany();
     return result;
   }
 
-  async findPaintingsByTags(tagNames: string[]) {
+  async getPaintingsByTags(tagNames: string[]) {
     if (tagNames.length === 0) {
       return []; // 빈 배열이 들어오면 빈 결과 반환
     }
 
     const paintings = await this.repo
       .createQueryBuilder('painting')
-      .innerJoinAndSelect('painting.tags', 'tag') // Painting과 Tag를 JOIN
+      .innerJoinAndSelect('painting.artist', 'artist')
+      .innerJoinAndSelect('painting.tags', 'tag')
+      .innerJoinAndSelect('painting.styles', 'style')
       .where((qb) => {
         // 서브쿼리 사용
         const subQuery = qb
@@ -234,129 +225,40 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     return paintings;
   }
 
-  /*************  ✨ Codeium Command ⭐  *************/
-  /**
-   *
-   * @param key WikiArtPainting Entity의 key
-   * @param excludedValues  제외할 값
-   * @param includedValues  포함할 값
-   * @returns Painting[]
-   */
-  /******  7b1afc31-0542-411c-94f9-2f84df44ce08  *******/
-  async searchPaintingWithoutAndWithValue(
-    key: keyof WikiArtPainting,
-    excludedValues: string[],
-    includedValues: string[],
-  ): Promise<Painting[]> {
-    const painting = new WikiArtPainting();
-
-    excludedValues = excludedValues.filter((value) => value !== '');
-    if (isArrayEmpty(excludedValues)) {
-      const dumpString = 'n1e1ve1e1r^Co1n1ta1i1ned';
-      excludedValues = [dumpString];
-    }
-
-    if (isArray(painting[key])) {
-      const result = await this.repo
-        .createQueryBuilder('painting')
-        .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
-        .where(`NOT (wikiArtPainting.${key} @> :excludedValues)`, { excludedValues })
-        .andWhere(`wikiArtPainting.${key} @> :includedValues`, {
-          includedValues,
-        })
-        .getMany();
-
-      return result;
-    }
-
-    const queryBuilder = await this.repo
-      .createQueryBuilder('painting')
-      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting');
-
-    excludedValues.forEach((excludedValue, index) => {
-      queryBuilder.andWhere(`wikiArtPainting.${key} NOT LIKE :excludedValue${index}`, {
-        [`excludedValue${index}`]: `%${excludedValue}%`,
-      });
-    });
-
-    /* TODO
-    - 반환 배열의 개수를 지정해야함.  
-    */
-
-    includedValues.forEach((includedValue, index) => {
-      queryBuilder.andWhere(`wikiArtPainting.${key} LIKE :includedValue${index}`, {
-        [`includedValue${index}`]: `%${includedValue}%`,
-      });
-    });
-
-    return queryBuilder.getMany();
-  }
-
-  //wikiArt functions
-  async getWikiArtInfo(id: string) {
-    const entity = await this.findOne({
-      where: { id },
-    });
-
-    if (entity == null) {
-      return null;
-    }
-
-    return entity.wikiArtPainting;
-  }
-
-  async updateWikiArt(id: string, dto: UpdateWikiArtInfoDTO) {
-    const partialEntity = {
-      id,
-      wikiArtPainting: {
-        ...dto,
-      },
-    };
-
-    /*TODO
-    밑에 로직이랑 해당 로직이란 무슨차이인가?
-    */
-    const updatedEntity = await this.repo.preload(partialEntity);
-    Logger.debug(`[updateWikiArt] partialEntity : ${JSON.stringify(partialEntity, null, 2)}`);
-
-    if (updatedEntity == undefined) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `id : ${id} ,\n dto  : ${JSON.stringify(dto, null, 2)}`,
-      );
-    }
-
-    await this.repo.save(updatedEntity);
-
-    // const painting = await this.repo
-    //   .createQueryBuilder('painting')
-    //   .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArt')
-    //   .where('painting.id = :id', { id })
-    //   .getOne();
-
-    // if (!this.validatePaintingEntity(painting))
-    //   throw new InternalServerErrorException(`[updateWikiArt] can't find Entity with id ${id}.`);
-
-    // if (painting.wikiArtPainting) {
-    //   const wikiArt = await this.wikiArtPaintingRepo
-    //     .createQueryBuilder('wiki')
-    //     .update()
-    //     .set(dto)
-    //     .where('wiki.wikiArtId = :id ', { id: painting.wikiArtPainting.wikiArtId })
-    //     .execute();
-    // }
-
-    const ret: IResult<UpdateInfo> = { data: { targetId: id, isSuccess: true } };
-
-    return ret;
-  }
-
   validatePaintingEntity(painting: Painting): boolean {
     if (!painting) return false;
 
     if (!painting.id) return false;
 
     return true;
+  }
+
+  async getColumnValueMap(column: keyof Painting): Promise<Map<string, any>> {
+    const map = new Map<string, any>();
+
+    if (column === 'artist') {
+      const artists = await this.artistService.getArtistsHavingPainting();
+
+      artists.forEach((artist) => {
+        if (!map.has(artist.id)) {
+          map.set(artist.id, artist.name);
+        }
+      });
+    }
+
+    if (column == 'tags') {
+      // const query = await this.repo.createQueryBuilder('p').leftJoinAndSelect('p.artist', 'artist');
+      // const sql = query.getQuery();
+      // Logger.debug(sql);
+      // const paintings = await query.getMany();
+    }
+
+    return map;
+  }
+
+  async validateColumnValue(column: keyof Painting, value: any) {
+    if (column === 'artist') {
+      this.artistService.validateName(value);
+    }
   }
 }
