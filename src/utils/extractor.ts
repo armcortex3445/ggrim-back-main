@@ -1,11 +1,22 @@
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+
 export function extractValues<T>(obj: T, key: keyof T): any[] {
   const fieldValues = new Set<any>();
 
   const field = obj[key];
 
+  if (!field) {
+    throw new ServiceException(
+      'SERVICE_RUN_ERROR',
+      'INTERNAL_SERVER_ERROR',
+      `${String(key)} is falsy.
+      obj : ${JSON.stringify(obj, null, 2)}`,
+    );
+  }
+
   if (Array.isArray(field)) {
-    field.forEach((value) => fieldValues.add(field));
-    return [...field];
+    field.forEach((value) => fieldValues.add(value));
+    return [...fieldValues];
   }
 
   fieldValues.add(field);
