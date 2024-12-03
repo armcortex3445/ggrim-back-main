@@ -18,6 +18,6 @@ export class Style extends CustomBaseEntity {
   @IsString()
   info_url!: string;
 
-  @ManyToMany(() => Painting, (painting) => painting.tags)
+  @ManyToMany(() => Painting, (painting) => painting.styles)
   paintings!: Painting[];
 }
