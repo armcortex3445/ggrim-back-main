@@ -15,8 +15,8 @@ export class SearchPaintingDTO {
       - 서버쪽에서 파싱 로직을 사용해야함
     */
   @IsOptional()
-  @IsJSON()
-  tags: string = JSON.stringify('[]');
+  @IsJSON({})
+  tags: string = '[]';
 
   /*형식 
     JSON 문자열 
@@ -25,5 +25,5 @@ export class SearchPaintingDTO {
     */
   @IsOptional()
   @IsJSON()
-  styles: string = JSON.stringify('[]');
+  styles: string = '[]';
 }
