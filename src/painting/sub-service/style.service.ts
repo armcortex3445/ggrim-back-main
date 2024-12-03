@@ -16,12 +16,12 @@ export class StyleService extends TypeOrmCrudService<Style> {
       return [];
     }
 
-    const tags = await this.repo
+    const styles = await this.repo
       .createQueryBuilder('style')
       .where('style.name IN (:...names)', { names })
       .getMany();
 
-    return tags;
+    return styles;
   }
 
   async getStylesRelatedToPainting() {
