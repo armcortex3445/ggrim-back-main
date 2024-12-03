@@ -1,5 +1,5 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { isArrayEmpty } from '../../utils/validator';
@@ -22,5 +22,16 @@ export class StyleService extends TypeOrmCrudService<Style> {
       .getMany();
 
     return tags;
+  }
+
+  async getStylesRelatedToPainting() {
+    const query = this.repo
+      .createQueryBuilder('style')
+      .innerJoin('style.paintings', 'painting')
+      .select(['style.name', 'style.id']);
+
+    Logger.debug(query.getSql());
+
+    return await query.getMany();
   }
 }

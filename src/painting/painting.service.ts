@@ -246,11 +246,22 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
       });
     }
 
-    if (column == 'tags') {
-      // const query = await this.repo.createQueryBuilder('p').leftJoinAndSelect('p.artist', 'artist');
-      // const sql = query.getQuery();
-      // Logger.debug(sql);
-      // const paintings = await query.getMany();
+    if (column === 'tags') {
+      const tags = await this.tagService.getTagsRelatedToPainting();
+      tags.forEach((tag) => {
+        if (!map.has(tag.id)) {
+          map.set(tag.id, tag.name);
+        }
+      });
+    }
+
+    if (column === 'styles') {
+      const styles = await this.styleService.getStylesRelatedToPainting();
+      styles.forEach((style) => {
+        if (!map.has(style.id)) {
+          map.set(style.id, style.name);
+        }
+      });
     }
 
     return map;
