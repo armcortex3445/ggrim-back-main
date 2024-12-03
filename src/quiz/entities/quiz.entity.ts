@@ -1,14 +1,16 @@
 import { IsNumber, IsString } from 'class-validator';
 import { Column, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
 import { Painting } from '../../painting/entities/painting.entity';
-import { QuizCategory } from '../type';
+import { QUIZ_TIME_LIMIT } from '../const';
+import { QUIZ_TYPE, QuizCategory } from '../type';
 
 export const QUIZ_CONSTANT = {
   DISTRACTOR_COUNT: 3,
   ANSWER_COUNT: 1,
 };
 
-export class Quiz {
+export class Quiz extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
   @IsString()
   id: string = '';
@@ -26,20 +28,31 @@ export class Quiz {
     eager: true,
   })
   @JoinTable()
-  distractorPaintings: Painting[] = [];
+  distractor_paintings: Painting[] = [];
 
   @ManyToMany(() => Painting, {
     cascade: ['update', 'insert'],
     eager: true,
   })
   @JoinTable()
-  answerPaintings: Painting[] = [];
+  answer_paintings: Painting[] = [];
+
+  @Column({
+    default: 0,
+  })
+  @IsNumber()
+  correct_count: number = 0;
+
+  @Column({
+    default: 0,
+  })
+  @IsNumber()
+  incorrect_count: number = 0;
+  @Column({
+    default: QUIZ_TIME_LIMIT.EASY,
+  })
+  time_limit!: number;
 
   @Column()
-  @IsNumber()
-  correctCount: number = -1;
-
-  @Column()
-  @IsNumber()
-  incorrectCount: number = -1;
+  type!: QUIZ_TYPE;
 }

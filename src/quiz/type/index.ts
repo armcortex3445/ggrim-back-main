@@ -2,4 +2,4 @@ import { Painting } from '../../painting/entities/painting.entity';
 
 export type QuizCategory = keyof Pick<Painting, 'tags' | 'completition_year' | 'artist' | 'styles'>;
 
-export const QuizCategoryValues = ['tags', 'completition_year', 'artist', 'styles'] as const;
+export type QUIZ_TYPE = 'ONE_CHOICE' | 'MULTIPLE_CHOICE' | 'TRUE_FALSE';
