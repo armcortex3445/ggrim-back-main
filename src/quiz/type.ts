@@ -1,4 +1,4 @@
-import { Painting } from '../../painting/entities/painting.entity';
+import { Painting } from '../painting/entities/painting.entity';
 
 export type QuizCategory = keyof Pick<Painting, 'tags' | 'completition_year' | 'artist' | 'styles'>;
 

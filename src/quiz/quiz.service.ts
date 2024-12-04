@@ -1,17 +1,27 @@
+import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { Artist } from '../artist/entities/artist.entity';
 import { Painting } from '../painting/entities/painting.entity';
 import { PaintingService } from '../painting/painting.service';
 import { extractValuesFromArray } from '../utils/extractor';
 import { getRandomElement, getRandomNumber } from '../utils/random';
+import { QUIZ_TYPE_CONFIG } from './const';
+import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizDTO } from './dto/quiz.dto';
-import { QUIZ_CONSTANT } from './entities/quiz.entity';
-import { QuizCategory } from './type';
+import { Quiz } from './entities/quiz.entity';
+import { QUIZ_TYPE, QuizCategory } from './type';
 
 @Injectable()
-export class QuizService {
-  constructor(@Inject(PaintingService) private readonly paintingService: PaintingService) {}
+export class QuizService extends TypeOrmCrudService<Quiz> {
+  constructor(
+    @InjectRepository(Quiz) repo: Repository<Quiz>,
+    @Inject(PaintingService) private readonly paintingService: PaintingService,
+  ) {
+    super(repo);
+  }
 
   async getCategoryValueMap(category: QuizCategory): Promise<Map<string, any>> {
     return await this.paintingService.getColumnValueMap(category);
@@ -56,7 +66,7 @@ export class QuizService {
     const distractorPaintings = await this.selectDistractorPaintings(
       category,
       commonCategoryValue,
-      QUIZ_CONSTANT.DISTRACTOR_COUNT,
+      QUIZ_TYPE_CONFIG.ONE_CHOICE.COUNT.DISTRACTOR,
     );
 
     const answerCategoryValues = this.getAnswerCategoryValues(
@@ -76,7 +86,7 @@ export class QuizService {
     const distractor = [...distractorPaintings];
 
     const ret = new QuizDTO(distractor, [answer], category, commonCategoryValue);
-    this.validateQuizDto(ret, category, QUIZ_CONSTANT.DISTRACTOR_COUNT);
+    this.validateQuizDto(ret, category, QUIZ_TYPE_CONFIG.ONE_CHOICE.COUNT.DISTRACTOR);
 
     return ret;
   }
@@ -172,7 +182,7 @@ export class QuizService {
       );
     }
 
-    if (answer.length != QUIZ_CONSTANT.ANSWER_COUNT) {
+    if (answer.length != QUIZ_TYPE_CONFIG.ONE_CHOICE.COUNT.DISTRACTOR) {
       throw new ServiceException(
         'SERVICE_RUN_ERROR',
         'INTERNAL_SERVER_ERROR',
