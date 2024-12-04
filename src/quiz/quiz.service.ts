@@ -182,7 +182,7 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
       );
     }
 
-    if (answer.length != QUIZ_TYPE_CONFIG.ONE_CHOICE.COUNT.DISTRACTOR) {
+    if (answer.length != QUIZ_TYPE_CONFIG.ONE_CHOICE.COUNT.ANSWER) {
       throw new ServiceException(
         'SERVICE_RUN_ERROR',
         'INTERNAL_SERVER_ERROR',
