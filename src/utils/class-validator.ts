@@ -14,8 +14,10 @@ export class IsInArrayConstraint implements ValidatorConstraintInterface {
   }
 
   defaultMessage(validationArguments: ValidationArguments): string {
-    const [allowedValues] = validationArguments.constraints;
-    return `Value must be one of the following : ${JSON.stringify(allowedValues)}`;
+    const [allowedValues]: string[][] = validationArguments.constraints;
+    const delimiter = ', ';
+    const allowed = allowedValues.join(delimiter);
+    return `${validationArguments.property} must be one of the following : ${allowed}`;
   }
 }
 
