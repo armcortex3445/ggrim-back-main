@@ -1,4 +1,5 @@
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { isNotFalsy } from './validator';
 
 export function extractValues<T>(obj: T, key: keyof T): any[] {
   const fieldValues = new Set<any>();
@@ -33,4 +34,10 @@ export function extractValuesFromArray<T>(list: T[], key: keyof T): any[] {
   });
 
   return [...fieldValues];
+}
+
+export function updateProperty<T>(obj: T, key: keyof T, value: T[keyof T] | undefined) {
+  if (isNotFalsy(value)) {
+    obj[key] = value;
+  }
 }
