@@ -3,9 +3,9 @@ export const QUIZ_TIME_LIMIT = {
   MIDDLE: 15,
   HARD: 10,
 } as const;
-export const QuizCategoryValues = ['tags', 'completition_year', 'artist', 'styles'] as const;
+export const CATEGORY_VALUES = ['tags', 'completition_year', 'artist', 'styles'] as const;
 
-export const QuizTypeValues = ['ONE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE'];
+export const TYPE_VALUES = ['ONE_CHOICE', 'MULTIPLE_CHOICE', 'TRUE_FALSE'];
 
 export const QUIZ_TYPE_CONFIG = {
   ONE_CHOICE: { COUNT: { ANSWER: 1, DISTRACTOR: 3 } },

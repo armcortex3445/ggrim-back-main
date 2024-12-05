@@ -31,3 +31,6 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
 ### Quiz Module
 - [x] generate Random Quiz
     - [x] provide logic by HTTP Api
+- [x] create Quiz
+    - [x] provide logic by HTTP Api
+    - [ ] provide logic by HTTP Api

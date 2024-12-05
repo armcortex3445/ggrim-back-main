@@ -209,4 +209,47 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
       );
     }
   }
+
+  async createQuiz(dto: CreateQuizDTO) {
+    const ids: string[] = [...dto.answerPaintingIds, ...dto.distractorPaintingIds];
+    const paintings: Painting[] = await this.paintingService.getByIds(ids);
+
+    const answerPaintings: Painting[] = paintings.filter((p) =>
+      dto.answerPaintingIds.includes(p.id),
+    );
+    const distractorPaintings: Painting[] = paintings.filter((p) =>
+      dto.distractorPaintingIds.includes(p.id),
+    );
+
+    return this.insertQuiz(
+      answerPaintings,
+      distractorPaintings,
+      dto.category,
+      dto.type,
+      dto.time_limit,
+      dto.title,
+    );
+  }
+
+  private async insertQuiz(
+    answerPaintings: Painting[],
+    distractorPaintings: Painting[],
+    category: QuizCategory,
+    type: QUIZ_TYPE,
+    timeLimit: number,
+    title: string,
+  ) {
+    const newQuiz = new Quiz();
+    /*TODO 
+      - Quiz.type 에 알맞은 그림 개수 검증필요
+    */
+    newQuiz.answer_paintings = [...answerPaintings];
+    newQuiz.distractor_paintings = [...distractorPaintings];
+    newQuiz.category = category;
+    newQuiz.type = type;
+    newQuiz.time_limit = timeLimit;
+    newQuiz.title = title;
+
+    return await this.repo.save(newQuiz);
+  }
 }

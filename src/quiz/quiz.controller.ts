@@ -1,4 +1,5 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizService } from './quiz.service';
 import { QuizCategory } from './type';
 
@@ -23,7 +24,7 @@ export class QuizController {
   // }
 
   /*TODO
-  - restFul APi 기반으로 구현하기 
+  - ? restFul APi 기반으로 구현하기 
   */
   // @Get('tags/:keyword')
   // async getNewQuizByTag(@Param('keyword') keyword: string) {
@@ -33,6 +34,11 @@ export class QuizController {
   @Get('artist/:keyword')
   async generateQuiz(@Param('keyword') keyword: string) {
     return this.quizService.generateQuizByValue('artist', keyword);
+  }
+
+  @Post()
+  async createQuiz(@Body() dto: CreateQuizDTO) {
+    return this.quizService.createQuiz(dto);
   }
 
   // @Patch(':id')
