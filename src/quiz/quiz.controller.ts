@@ -1,3 +1,4 @@
+import { Crud, CrudController } from '@dataui/crud';
 import {
   Body,
   Controller,
@@ -11,17 +12,43 @@ import {
 } from '@nestjs/common';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { UpdateQuizDTO } from './dto/update-quiz.dto';
+import { Quiz } from './entities/quiz.entity';
 import { QuizService } from './quiz.service';
 import { QuizCategory } from './type';
 
+@Crud({
+  model: {
+    type: Quiz,
+  },
+  routes: {
+    only: ['getOneBase'],
+  },
+  params: {
+    id: {
+      field: 'id',
+      type: 'uuid',
+      primary: true,
+    },
+  },
+  query: {
+    join: {
+      distractor_paintings: {
+        eager: true,
+      },
+      answer_paintings: {
+        eager: true,
+      },
+    },
+  },
+})
 @UsePipes(ValidationPipe)
 @Controller('quiz')
-export class QuizController {
-  constructor(private readonly quizService: QuizService) {}
+export class QuizController implements CrudController<Quiz> {
+  constructor(public service: QuizService) {}
 
   @Get('category/:key')
   async getQuizTags(@Param('key') key: string) {
-    const map = await this.quizService.getCategoryValueMap(key as QuizCategory);
+    const map = await this.service.getCategoryValueMap(key as QuizCategory);
     return [...map.values()];
   }
 
@@ -31,8 +58,8 @@ export class QuizController {
 
   // @Get(':category')
   // async getNewQuizRandomly(@Param('category', validateCategory) category: string) {
-  //   const categoryValue = this.quizService.getRandomCategoryValue(category);
-  //   return this.quizService.createQuizDTO(category, categoryValue);
+  //   const categoryValue = this.service.getRandomCategoryValue(category);
+  //   return this.service.createQuizDTO(category, categoryValue);
   // }
 
   /*TODO
@@ -40,31 +67,31 @@ export class QuizController {
   */
   // @Get('tags/:keyword')
   // async getNewQuizByTag(@Param('keyword') keyword: string) {
-  //   return this.quizService.createQuizDTO('tags', keyword);
+  //   return this.service.createQuizDTO('tags', keyword);
   // }
 
   @Get('artist/:keyword')
   async generateQuiz(@Param('keyword') keyword: string) {
-    return this.quizService.generateQuizByValue('artist', keyword);
+    return this.service.generateQuizByValue('artist', keyword);
   }
 
   @Post()
-  async createQuiz(@Body() dto: CreateQuizDTO) {
-    return this.quizService.createQuiz(dto);
+  async create(@Body() dto: CreateQuizDTO) {
+    return this.service.createQuiz(dto);
   }
 
   @Put(':id')
   async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateQuizDTO) {
-    return this.quizService.updateQuiz(id, dto);
+    return this.service.updateQuiz(id, dto);
   }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDTO) {
-  //   return this.quizService.update(+id, updateQuizDto);
+  //   return this.service.update(+id, updateQuizDto);
   // }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {
-  //   return this.quizService.remove(+id);
+  //   return this.service.remove(+id);
   // }
 }

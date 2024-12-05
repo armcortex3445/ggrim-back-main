@@ -37,3 +37,8 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
     - [ ] provide logic by HTTP Api
     - detail
         - disable to update Quiz type. the other is able to be updated
+- [x] get one Quiz data by id
+    - [x] provide logic by HTTP Api
+    - detail
+        - use other filter option 
+            ref : https://gid-oss.github.io/dataui-nestjs-crud/controllers/#options 
