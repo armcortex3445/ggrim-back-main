@@ -1,8 +1,19 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizService } from './quiz.service';
 import { QuizCategory } from './type';
 
+@UsePipes(ValidationPipe)
 @Controller('quiz')
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
