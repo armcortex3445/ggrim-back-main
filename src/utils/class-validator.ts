@@ -19,7 +19,7 @@ export class IsInArrayConstraint implements ValidatorConstraintInterface {
   }
 }
 
-export function IsInArray(validValues: any[], validationOptions?: ValidationOptions) {
+export function IsInArray(validValues: readonly any[], validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
       name: 'isInArray',
