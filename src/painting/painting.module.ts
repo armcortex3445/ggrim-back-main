@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
-import { PaintingService } from './painting.service';
-import { PaintingController } from './painting.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ArtistModule } from '../artist/artist.module';
 import { Painting } from './entities/painting.entity';
+import { Style } from './entities/style.entity';
+import { Tag } from './entities/tag.entity';
 import { WikiArtPainting } from './entities/wikiArt-painting.entity';
+import { PaintingController } from './painting.controller';
+import { PaintingService } from './painting.service';
+import { StyleService } from './sub-service/style.service';
+import { TagService } from './sub-service/tag.service';
+import { WikiArtPaintingService } from './sub-service/wikiArt.painting.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Painting, WikiArtPainting])],
+  imports: [TypeOrmModule.forFeature([Painting, WikiArtPainting, Tag, Style]), ArtistModule],
   controllers: [PaintingController],
-  providers: [PaintingService],
-  exports: [PaintingService],
+  providers: [PaintingService, WikiArtPaintingService, StyleService, TagService],
+  exports: [PaintingService, WikiArtPaintingService],
 })
 export class PaintingModule {}

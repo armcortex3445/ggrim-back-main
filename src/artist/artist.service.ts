@@ -1,26 +1,55 @@
-import { Injectable } from '@nestjs/common';
-import { CreateArtistDto } from './dto/create-artist.dto';
-import { UpdateArtistDto } from './dto/update-artist.dto';
+import { TypeOrmCrudService } from '@dataui/crud-typeorm';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { isArrayEmpty } from '../utils/validator';
+import { Artist } from './entities/artist.entity';
 
 @Injectable()
-export class ArtistService {
-  create(createArtistDto: CreateArtistDto) {
-    return 'This action adds a new artist';
+export class ArtistService extends TypeOrmCrudService<Artist> {
+  constructor(@InjectRepository(Artist) repo: Repository<Artist>) {
+    super(repo);
   }
 
-  findAll() {
-    return `This action returns all artist`;
+  async getArtistsHavingPainting(): Promise<Artist[]> {
+    const query = this.repo
+      .createQueryBuilder('artist')
+      .innerJoin('artist.paintings', 'painting')
+      .select(['artist.name', 'artist.id']);
+
+    Logger.debug(query.getSql());
+
+    return query.getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} artist`;
-  }
+  async validateName(name: string) {
+    /*TODO
+      - 쿼리 없이, 검증하는 로직 구현 필요
+        - 방법1) : 앱내에서 값을 갖고 있는다.
+          - 어떻게 앱내의 값을 갱신할 것인가?
+    */
+    const query = this.repo
+      .createQueryBuilder('artist')
+      .leftJoinAndSelect('artist.paintings', 'painting')
+      .where('artist.name = :artistName', { artistName: name });
 
-  update(id: number, updateArtistDto: UpdateArtistDto) {
-    return `This action updates a #${id} artist`;
-  }
+    Logger.debug(query.getSql());
 
-  remove(id: number) {
-    return `This action removes a #${id} artist`;
+    const artists = await query.getMany();
+
+    if (isArrayEmpty(artists)) {
+      throw new ServiceException('ENTITY_NOT_FOUND', 'BAD_REQUEST', `name(${name}) is not found `);
+    }
+
+    const isHavingPainting = artists.every((artist) => artist.paintings);
+
+    if (!isHavingPainting) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `name(${name}) has no painting`,
+      );
+    }
   }
 }

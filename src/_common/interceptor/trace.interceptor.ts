@@ -1,12 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Inject,
-  Injectable,
-  Logger,
-  NestInterceptor,
-} from '@nestjs/common';
-import { trace } from 'console';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Request } from 'express';
 import { ClsService } from 'nestjs-cls';
 import { Observable, catchError } from 'rxjs';

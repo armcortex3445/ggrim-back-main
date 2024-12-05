@@ -1,3 +1,24 @@
 {
-    "editor.codeActionsOnSave": {}
+    "editor.codeActionsOnSave" : {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit",
+    },
+    "typescript.validate.enable" : true,
+    
+    "cSpell.language": "en",
+    "cSpell.enableFiletypes": ["typescript", "javascript", "python","markdown","plaintext"],
+    "cSpell.words": [
+        "completition",
+        "distractor",
+        "myCustomWord",
+        "NestJS",
+        "serie",
+        "TypeScript"
+    ],
+    "cSpell.ignorePaths": ["node_modules/**", "**/*.json"],
+    "cSpell.ignoreRegExpList": [
+        "/^import /",                     // import로 시작하는 구문을 무시
+        "/from\\s+['\"](.+)['\"]/i"       // from 절 뒤의 경로도 무시
+      ],
+    "cSpell.enabled": true  // Enable the spell checker
 }

@@ -1,32 +1,46 @@
+import { Crud, CrudController } from '@dataui/crud';
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
+  Controller,
+  DefaultValuePipe,
+  Get,
+  Logger,
   Param,
-  Delete,
+  ParseIntPipe,
+  Post,
+  Query,
   UsePipes,
   ValidationPipe,
-  Logger,
-  ParseIntPipe,
-  Query,
-  ParseUUIDPipe,
-  DefaultValuePipe,
 } from '@nestjs/common';
-import { IResult, PaintingService } from './painting.service';
-import { CreatePaintingDto } from './dto/create-painting.dto';
-import { UpdatePaintingDto } from './dto/update-painting.dto';
-import { Crud, CrudController } from '@dataui/crud';
-import { Painting } from './entities/painting.entity';
-import { FindManyOptions, FindOneOptions, FindOptionsWhere } from 'typeorm';
-import { FindPaintingDTO } from './dto/find-painting.dto';
-import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
+import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
+import { Painting } from './entities/painting.entity';
+import { PaintingService } from './painting.service';
+import { IPaginationResult } from './responseDTO';
 
 @Crud({
   model: {
     type: Painting,
+  },
+  routes: {
+    only: ['getOneBase'],
+  },
+  params: {
+    id: {
+      field: 'id',
+      type: 'uuid',
+      primary: true,
+    },
+  },
+  query: {
+    join: {
+      artist: {
+        eager: true,
+      },
+      tags: {
+        eager: true,
+      },
+    },
   },
 })
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -34,40 +48,38 @@ import { SearchPaintingDTO } from './dto/search-painting.dto';
 export class PaintingController implements CrudController<Painting> {
   constructor(public service: PaintingService) {}
 
-  @Get('search')
+  @Get('/')
   async searchPainting(
     @Query() dto: SearchPaintingDTO,
     @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
   ) {
-    return this.service.searchPainting(dto, page);
-  }
-  @Get()
-  async findPainting(@Query() query: FindPaintingDTO) {
-    if (query.id) {
-      Logger.debug('find entity with id :' + query.id);
-      const ret: IResult<Painting> = {
-        data: await this.service.findOneById(query.id),
-      };
+    const paginationCount = 50;
+    const data: Painting[] = await this.service.searchPainting(dto, page, paginationCount);
 
-      return ret;
-    }
-    return this.service.findPainting(query.wikiArtID);
+    const ret: IPaginationResult<Painting> = {
+      data,
+      isMore: data.length === paginationCount,
+      count: data.length,
+      pagination: page,
+    };
+
+    return ret;
+  }
+
+  @Get('values/:columnName')
+  async getColumnValues(@Param('columnName') columnName: string) {
+    /*TODO
+    - columnName 검증 pipe 데코레이터 구현 필요
+      - PaintingTable 내에 존재하는 column 이름인지 확인 필요
+    */
+    const map = await this.service.getColumnValueMap(columnName as keyof Painting);
+
+    return [...map.values()];
   }
 
   @Post()
-  createPainting(@Body() body: CreatePaintingDto) {
+  createPainting(@Body() body: CreatePaintingDTO) {
     Logger.debug(`[createPainting] ${JSON.stringify(body)}`);
     return this.service.create(body);
-  }
-
-  //related to wiki-art
-  @Get(':id/wiki-art')
-  async findWikiArtInfo(@Param('id') id: string) {
-    return this.service.getwikiArtInfo(id);
-  }
-
-  @Patch(':id/wiki-art')
-  updateWikiArtInfo(@Param('id') id: string, @Body() updateWikiArtInfo: UpdateWikiArtInfoDTO) {
-    return this.service.updateWikiArt(id, updateWikiArtInfo);
   }
 }

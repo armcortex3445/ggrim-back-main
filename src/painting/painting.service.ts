@@ -1,15 +1,18 @@
-import { Inject, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import { CreatePaintingDto } from './dto/create-painting.dto';
-import { UpdatePaintingDto } from './dto/update-painting.dto';
-import { Painting } from './entities/painting.entity';
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { InjectEntityManager, InjectRepository } from '@nestjs/typeorm';
-import { FindPaintingDTO } from './dto/find-painting.dto';
-import { isArray } from 'class-validator';
-import { UpdateWikiArtInfoDTO } from './dto/update-wikiArt-info.dto';
-import { DataSource, EntityManager, Repository } from 'typeorm';
-import { WikiArtPainting } from './entities/wikiArt-painting.entity';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { ArtistService } from '../artist/artist.service';
+import { Artist } from '../artist/entities/artist.entity';
+import { isArrayEmpty, isNotFalsy } from '../utils/validator';
+import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
+import { Painting } from './entities/painting.entity';
+import { Style } from './entities/style.entity';
+import { Tag } from './entities/tag.entity';
+import { StyleService } from './sub-service/style.service';
+import { TagService } from './sub-service/tag.service';
 
 export interface IPaginationResult<T> {
   data: T[];
@@ -18,7 +21,7 @@ export interface IPaginationResult<T> {
   isMore?: boolean;
 }
 export interface IResult<T> {
-  data: T;
+  data: T | null | undefined;
 }
 
 export interface UpdateInfo {
@@ -29,127 +32,217 @@ export interface UpdateInfo {
 @Injectable()
 export class PaintingService extends TypeOrmCrudService<Painting> {
   constructor(
-    @InjectRepository(Painting) private readonly paintingRepository: Repository<Painting>,
+    @InjectRepository(Painting) repo: Repository<Painting>,
+    @Inject(TagService) private readonly tagService: TagService,
+    @Inject(StyleService) private readonly styleService: StyleService,
+    @Inject(ArtistService) private readonly artistService: ArtistService,
   ) {
-    super(paintingRepository);
+    super(repo);
   }
-  async create(createPaintingDto: CreatePaintingDto) {
-    const result = await this.paintingRepository
+  async create(dto: CreatePaintingDTO) {
+    /*TODO
+    - relation 데이터 삽입을 위한 로직 재사용성 및 성능 높이기
+      - 방법 1) 각각의 값이 DB에 존재하는지 검증하는 validator decorator를 구현한다.
+        - 쿼리 발생 횟수를 줄이기 위해서, 각각의 값을 앱에 저장하거나 DB cache를 사용한다.
+        - decorator는 다른 dto에서도 사용할 수 있게 만든다.
+    */
+    let tags: Tag[] = [];
+    if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
+      tags = await this.tagService.findManyByName(dto.tags);
+      if (isArrayEmpty(tags)) {
+        throw new ServiceException(
+          'ENTITY_NOT_FOUND',
+          'BAD_REQUEST',
+          `not found : ${JSON.stringify(dto.tags)}`,
+        );
+      }
+    }
+
+    let styles: Style[] = [];
+    if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
+      styles = await this.tagService.findManyByName(dto.styles);
+      if (isArrayEmpty(styles)) {
+        throw new ServiceException(
+          'ENTITY_NOT_FOUND',
+          'BAD_REQUEST',
+          `not found : ${JSON.stringify(dto.styles)}`,
+        );
+      }
+    }
+
+    let artist: Artist | undefined = undefined;
+    if (isNotFalsy(dto.artistName)) {
+      const artists = await this.artistService.find({
+        where: { name: dto.artistName },
+      });
+
+      if (artists.length > 1) {
+        throw new ServiceException(
+          'DB_INCONSISTENCY',
+          'INTERNAL_SERVER_ERROR',
+          `${dto.artistName} is multiple.\n
+        ${JSON.stringify(artists, null, 2)}`,
+        );
+      }
+
+      if (isArrayEmpty(artists)) {
+        throw new ServiceException(
+          'ENTITY_NOT_FOUND',
+          'BAD_REQUEST',
+          `not found : ${dto.artistName}`,
+        );
+      }
+      artist = artists[0];
+    }
+    //paintingName연결
+
+    const result = await this.repo
       .createQueryBuilder()
       .insert()
       .into(Painting)
-      .values([{ title: createPaintingDto.title }])
+      .values([
+        {
+          title: dto.title,
+          image_url: dto.image_url,
+          description: dto.description,
+          width: dto.width,
+          height: dto.height,
+          completition_year: dto.completition_year,
+          artist,
+          tags,
+          styles,
+        },
+      ])
       .execute();
 
-    const ret = { id: result.identifiers[0].id };
+    const ret = { ...result.generatedMaps };
 
     return ret;
   }
 
-  findAll() {
-    return `This action returns all painting`;
-  }
+  async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
+    /*TODO
+    - 입력된 tag와 style이 유효한지 점검하기
+    */
+    const targetTags = JSON.parse(dto.tags) as string[];
+    const targetStyles = JSON.parse(dto.styles) as string[];
+    Logger.debug(`tags : ${JSON.stringify(targetTags)}`);
 
-  update(id: number, updatePaintingDto: UpdatePaintingDto) {
-    return `This action updates a #${id} painting`;
-  }
+    const subQueryFilterByTag = await this.repo
+      .createQueryBuilder()
+      .subQuery()
+      .select('painting_tags.paintingId')
+      .from('painting_tags_tag', 'painting_tags') // Many-to-Many 연결 테이블
+      .innerJoin('tag', 'tag', 'tag.id = painting_tags.tagId') // 연결 테이블과 Tag JOIN
+      .where('tag.name IN (:...tagNames)') // tagNames 필터링
+      .groupBy('painting_tags.paintingId')
+      .having('COUNT(DISTINCT tag.id) = :tagCount') // 정확한 태그 갯수 매칭
+      .getQuery();
 
-  remove(id: number) {
-    return `This action removes a #${id} painting`;
-  }
+    const subQueryFilterByStyle = await this.repo
+      .createQueryBuilder()
+      .subQuery()
+      .select('painting_styles.paintingId')
+      .from('painting_styles_style', 'painting_styles') // Many-to-Many 연결 테이블
+      .innerJoin('style', 'style', 'style.id = painting_styles.styleId')
+      .where('style.name IN (:...styleNames)')
+      .groupBy('painting_styles.paintingId')
+      .having('COUNT(DISTINCT style.id) = :styleCount')
+      .getQuery();
 
-  findOneById(id: string) {
-    return this.paintingRepository
-      .createQueryBuilder('painting')
-      .innerJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
-      .where('painting.id = :id ', { id })
-      .getOne();
-  }
+    const mainQuery = await this.repo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.tags', 'tag')
+      .leftJoinAndSelect('p.styles', 'style')
+      .leftJoinAndSelect('p.artist', 'artist')
+      .where("p.title like '%' || :title || '%'", { title: dto.title })
+      .andWhere("artist.name like '%' || :artist || '%'", {
+        artist: dto.artistName,
+      });
 
-  async findPainting(wikiArtID: string) {
-    let data: Painting = null;
-    const ret: IResult<Painting> = { data: null };
+    if (targetTags.length > 0) {
+      mainQuery.andWhere(`p.id IN ${subQueryFilterByTag}`, {
+        tagNames: targetTags,
+        tagCount: targetTags.length,
+      });
+    }
 
-    data = await this.paintingRepository
-      .createQueryBuilder('painting')
-      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
-      .where('wikiArtPainting.wikiArtId = :wikiArtID', { wikiArtID })
-      .getOne();
+    if (targetStyles.length > 0) {
+      mainQuery.andWhere(`p.id IN ${subQueryFilterByStyle}`, {
+        styleNames: targetStyles,
+        styleCount: targetStyles.length,
+      });
+    }
 
-    ret.data = data;
+    Logger.debug(mainQuery.getSql());
 
-    return ret;
-  }
-
-  async searchPainting(dto: SearchPaintingDTO, page: number) {
-    const maxCnt = 50;
-
-    const result = await this.paintingRepository
-      .createQueryBuilder('painting')
-      .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArtPainting')
-      .where("painting.title like '%' || :title || '%'", { title: dto.title })
-      .andWhere("wikiArtPainting.artistName like '%' || :artist || '%'", {
-        artist: dto.artistName || '',
-      })
-      .skip(page * maxCnt)
-      .take(maxCnt)
+    const result = mainQuery
+      .skip(page * paginationCount)
+      .take(paginationCount)
       .getMany();
 
-    const ret: IPaginationResult<Painting> = {
-      data: result,
-      isMore: result.length === maxCnt,
-      count: result.length,
-      pagination: page,
-    };
-    return ret;
+    return result;
+  }
+  async getPaintingsByArtist(artistName: string) {
+    const result = await this.repo
+      .createQueryBuilder('p')
+      .innerJoinAndSelect('p.artist', 'artist')
+      .innerJoinAndSelect('p.tags', 'tag')
+      .innerJoinAndSelect('p.styles', 'style')
+      .where('artist.name  = :artist', {
+        artist: artistName,
+      })
+      .getMany();
+    return result;
   }
 
-  //wikiArt functions
-  async getwikiArtInfo(id: string) {
-    const ret: IResult<WikiArtPainting> = { data: null };
+  async getPaintingsByTags(tagNames: string[]) {
+    if (tagNames.length === 0) {
+      return []; // 빈 배열이 들어오면 빈 결과 반환
+    }
 
-    const entity = await this.findOneById(id);
+    const paintings = await this.repo
+      .createQueryBuilder('painting')
+      .innerJoinAndSelect('painting.artist', 'artist')
+      .innerJoinAndSelect('painting.tags', 'tag')
+      .innerJoinAndSelect('painting.styles', 'style')
+      .where((qb) => {
+        // 서브쿼리 사용
+        const subQuery = qb
+          .subQuery()
+          .select('painting_tags.paintingId')
+          .from('painting_tags_tag', 'painting_tags') // Many-to-Many 연결 테이블
+          .innerJoin('tag', 'tag', 'tag.id = painting_tags.tagId') // 연결 테이블과 Tag JOIN
+          .where('tag.name IN (:...tagNames)', { tagNames }) // tagNames 필터링
+          .groupBy('painting_tags.paintingId')
+          .having('COUNT(DISTINCT tag.id) = :tagCount') // 정확한 태그 갯수 매칭
+          .getQuery();
+        return `painting.id IN ${subQuery}`;
+      })
+      .setParameter('tagCount', tagNames.length) // 태그 갯수 설정
+      .getMany();
 
-    return entity.wikiArtPainting;
+    return paintings;
   }
 
-  async updateWikiArt(id: string, dto: UpdateWikiArtInfoDTO) {
-    const partialEntity = {
-      id,
-      wikiArtPainting: {
-        ...dto,
-      },
-    };
+  async getByIds(ids: string[]): Promise<Painting[]> {
+    const query = this.repo.createQueryBuilder('p').select().where('p.id IN (:...ids)', { ids });
 
-    /*TODO
-    밑에 로직이랑 해당 로직이란 무슨차이인가?
-    */
-    const updatedEntity = await this.paintingRepository.preload(partialEntity);
-    Logger.debug(`[updateWikiArt] partialEntity : ${JSON.stringify(partialEntity, null, 2)}`);
+    Logger.debug(query.getSql());
 
-    await this.paintingRepository.save(updatedEntity);
+    const paintings: Painting[] = await query.getMany();
 
-    // const painting = await this.paintingRepository
-    //   .createQueryBuilder('painting')
-    //   .leftJoinAndSelect('painting.wikiArtPainting', 'wikiArt')
-    //   .where('painting.id = :id', { id })
-    //   .getOne();
+    if (paintings.length !== ids.length) {
+      const foundIds = paintings.map((p) => p.id);
+      const notFoundIds = ids.filter((id) => !foundIds.includes(id));
 
-    // if (!this.validatePaintingEntity(painting))
-    //   throw new InternalServerErrorException(`[updateWikiArt] can't find Entity with id ${id}.`);
-
-    // if (painting.wikiArtPainting) {
-    //   const wikiArt = await this.wikiArtPaintingRepo
-    //     .createQueryBuilder('wiki')
-    //     .update()
-    //     .set(dto)
-    //     .where('wiki.wikiArtId = :id ', { id: painting.wikiArtPainting.wikiArtId })
-    //     .execute();
-    // }
-
-    const ret: IResult<UpdateInfo> = { data: { targetId: id, isSuccess: true } };
-
-    return ret;
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `Can Not found ids : ${JSON.stringify(notFoundIds)}`,
+      );
+    }
+    return paintings;
   }
 
   validatePaintingEntity(painting: Painting): boolean {
@@ -158,5 +251,45 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     if (!painting.id) return false;
 
     return true;
+  }
+
+  async getColumnValueMap(column: keyof Painting): Promise<Map<string, any>> {
+    const map = new Map<string, any>();
+
+    if (column === 'artist') {
+      const artists = await this.artistService.getArtistsHavingPainting();
+
+      artists.forEach((artist) => {
+        if (!map.has(artist.id)) {
+          map.set(artist.id, artist.name);
+        }
+      });
+    }
+
+    if (column === 'tags') {
+      const tags = await this.tagService.getTagsRelatedToPainting();
+      tags.forEach((tag) => {
+        if (!map.has(tag.id)) {
+          map.set(tag.id, tag.name);
+        }
+      });
+    }
+
+    if (column === 'styles') {
+      const styles = await this.styleService.getStylesRelatedToPainting();
+      styles.forEach((style) => {
+        if (!map.has(style.id)) {
+          map.set(style.id, style.name);
+        }
+      });
+    }
+
+    return map;
+  }
+
+  async validateColumnValue(column: keyof Painting, value: any) {
+    if (column === 'artist') {
+      this.artistService.validateName(value);
+    }
   }
 }
