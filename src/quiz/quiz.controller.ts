@@ -48,6 +48,14 @@ export class QuizController implements CrudController<Quiz> {
 
   @Get('category/:key')
   async getQuizTags(@Param('key') key: string) {
+if (!CATEGORY_VALUES.includes(key as QuizCategory)) {
+      throw new ServiceException(
+        'BASE',
+        'BAD_REQUEST',
+        `${key} is not allowed.
+      allowed category : ${JSON.stringify(CATEGORY_VALUES)}`,
+      );
+    }
     const map = await this.service.getCategoryValueMap(key as QuizCategory);
     return [...map.values()];
   }
