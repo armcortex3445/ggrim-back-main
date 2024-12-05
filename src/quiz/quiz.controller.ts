@@ -7,10 +7,14 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { CATEGORY_VALUES } from './const';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
+import { GenerateQuizQueryDTO } from './dto/generate-quiz.query.dto';
 import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { Quiz } from './entities/quiz.entity';
 import { QuizService } from './quiz.service';
@@ -48,7 +52,7 @@ export class QuizController implements CrudController<Quiz> {
 
   @Get('category/:key')
   async getQuizTags(@Param('key') key: string) {
-if (!CATEGORY_VALUES.includes(key as QuizCategory)) {
+    if (!CATEGORY_VALUES.includes(key as QuizCategory)) {
       throw new ServiceException(
         'BASE',
         'BAD_REQUEST',
@@ -60,27 +64,9 @@ if (!CATEGORY_VALUES.includes(key as QuizCategory)) {
     return [...map.values()];
   }
 
-  /*TODO
-  - category 값을 검증하는 pipe 구현하기
-  */
-
-  // @Get(':category')
-  // async getNewQuizRandomly(@Param('category', validateCategory) category: string) {
-  //   const categoryValue = this.service.getRandomCategoryValue(category);
-  //   return this.service.createQuizDTO(category, categoryValue);
-  // }
-
-  /*TODO
-  - ? restFul APi 기반으로 구현하기 
-  */
-  // @Get('tags/:keyword')
-  // async getNewQuizByTag(@Param('keyword') keyword: string) {
-  //   return this.service.createQuizDTO('tags', keyword);
-  // }
-
-  @Get('artist/:keyword')
-  async generateQuiz(@Param('keyword') keyword: string) {
-    return this.service.generateQuizByValue('artist', keyword);
+  @Get('random')
+  async generateNew(@Query() dto: GenerateQuizQueryDTO) {
+    return this.service.generateQuizByValue(dto.category, dto.keyword);
   }
 
   @Post()
