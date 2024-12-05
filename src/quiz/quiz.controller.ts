@@ -10,6 +10,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
+import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { QuizService } from './quiz.service';
 import { QuizCategory } from './type';
 
@@ -50,6 +51,11 @@ export class QuizController {
   @Post()
   async createQuiz(@Body() dto: CreateQuizDTO) {
     return this.quizService.createQuiz(dto);
+  }
+
+  @Put(':id')
+  async update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateQuizDTO) {
+    return this.quizService.updateQuiz(id, dto);
   }
 
   // @Patch(':id')

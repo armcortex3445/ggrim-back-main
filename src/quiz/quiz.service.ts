@@ -6,11 +6,13 @@ import { ServiceException } from '../_common/filter/exception/service/service-ex
 import { Artist } from '../artist/entities/artist.entity';
 import { Painting } from '../painting/entities/painting.entity';
 import { PaintingService } from '../painting/painting.service';
-import { extractValuesFromArray } from '../utils/extractor';
+import { extractValuesFromArray, updateProperty } from '../utils/object';
 import { getRandomElement, getRandomNumber } from '../utils/random';
+import { isNotFalsy } from '../utils/validator';
 import { QUIZ_TYPE_CONFIG } from './const';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizDTO } from './dto/quiz.dto';
+import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { Quiz } from './entities/quiz.entity';
 import { QUIZ_TYPE, QuizCategory } from './type';
 
@@ -251,5 +253,30 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     newQuiz.title = title;
 
     return await this.repo.save(newQuiz);
+  }
+
+  async updateQuiz(id: string, dto: UpdateQuizDTO) {
+    const quiz = await this.repo.findOneByOrFail({ id });
+    if (!isNotFalsy(quiz)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `Not found quiz.\n` + `id : ${id}`,
+      );
+    }
+
+    updateProperty(quiz, 'category', dto.category);
+    updateProperty(quiz, 'time_limit', dto.time_limit);
+    updateProperty(quiz, 'title', dto.title);
+
+    if (dto.answerPaintingIds) {
+      quiz.answer_paintings = await this.paintingService.getByIds(dto.answerPaintingIds);
+    }
+
+    if (dto.distractorPaintingIds) {
+      quiz.distractor_paintings = await this.paintingService.getByIds(dto.distractorPaintingIds);
+    }
+
+    return this.repo.save(quiz);
   }
 }

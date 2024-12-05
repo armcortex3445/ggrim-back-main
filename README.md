@@ -33,4 +33,7 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
     - [x] provide logic by HTTP Api
 - [x] create Quiz
     - [x] provide logic by HTTP Api
+- [ ] update Quiz
     - [ ] provide logic by HTTP Api
+    - detail
+        - disable to update Quiz type. the other is able to be updated
