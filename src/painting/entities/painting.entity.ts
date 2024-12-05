@@ -27,7 +27,6 @@ export class Painting extends CustomBaseEntity {
 
   @OneToOne(() => WikiArtPainting, {
     cascade: ['update', 'insert'],
-    eager: true,
   })
   @JoinColumn()
   wikiArtPainting!: WikiArtPainting;

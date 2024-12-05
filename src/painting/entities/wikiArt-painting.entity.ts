@@ -96,7 +96,6 @@ export class WikiArtPainting {
 
   @OneToOne(() => Painting, {
     cascade: ['update', 'insert'],
-    eager: true,
   })
   painting!: Painting;
 }
