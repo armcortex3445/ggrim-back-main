@@ -225,6 +225,26 @@ export class PaintingService extends TypeOrmCrudService<Painting> {
     return paintings;
   }
 
+  async getByIds(ids: string[]): Promise<Painting[]> {
+    const query = this.repo.createQueryBuilder('p').select().where('p.id IN (:...ids)', { ids });
+
+    Logger.debug(query.getSql());
+
+    const paintings: Painting[] = await query.getMany();
+
+    if (paintings.length !== ids.length) {
+      const foundIds = paintings.map((p) => p.id);
+      const notFoundIds = ids.filter((id) => !foundIds.includes(id));
+
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `Can Not found ids : ${JSON.stringify(notFoundIds)}`,
+      );
+    }
+    return paintings;
+  }
+
   validatePaintingEntity(painting: Painting): boolean {
     if (!painting) return false;
 

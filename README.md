@@ -26,6 +26,7 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
 ### Painting Module
 - [x] get Paintings By Title and ArtistName and Tag and Styles
     - [x] provide logic by HTTP Api
+- [x] get Paintings By Id list 
 - [x] create Painting 
 ### Quiz Module
 - [x] generate Random Quiz
