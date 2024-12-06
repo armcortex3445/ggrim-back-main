@@ -30,15 +30,13 @@ export interface UpdateInfo {
 }
 
 @Injectable()
-export class PaintingService extends TypeOrmCrudService<Painting> {
+export class PaintingService {
   constructor(
-    @InjectRepository(Painting) repo: Repository<Painting>,
+    @InjectRepository(Painting) private readonly repo: Repository<Painting>,
     @Inject(TagService) private readonly tagService: TagService,
     @Inject(StyleService) private readonly styleService: StyleService,
     @Inject(ArtistService) private readonly artistService: ArtistService,
-  ) {
-    super(repo);
-  }
+  ) {}
   async create(dto: CreatePaintingDTO) {
     /*TODO
     - relation 데이터 삽입을 위한 로직 재사용성 및 성능 높이기

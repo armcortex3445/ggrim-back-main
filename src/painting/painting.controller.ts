@@ -1,9 +1,9 @@
-import { Crud, CrudController } from '@dataui/crud';
 import {
   Body,
   Controller,
   DefaultValuePipe,
   Get,
+  Inject,
   Logger,
   Param,
   ParseIntPipe,
@@ -13,40 +13,16 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
+import { FindPaintingQueryDTO } from './dto/find-painting.query.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 import { PaintingService } from './painting.service';
 import { IPaginationResult } from './responseDTO';
 
-@Crud({
-  model: {
-    type: Painting,
-  },
-  routes: {
-    only: ['getOneBase'],
-  },
-  params: {
-    id: {
-      field: 'id',
-      type: 'uuid',
-      primary: true,
-    },
-  },
-  query: {
-    join: {
-      artist: {
-        eager: true,
-      },
-      tags: {
-        eager: true,
-      },
-    },
-  },
-})
 @UsePipes(new ValidationPipe({ transform: true }))
 @Controller('painting')
-export class PaintingController implements CrudController<Painting> {
-  constructor(public service: PaintingService) {}
+export class PaintingController {
+  constructor(@Inject(PaintingService) private readonly service: PaintingService) {}
 
   @Get('/')
   async searchPainting(
@@ -75,6 +51,11 @@ export class PaintingController implements CrudController<Painting> {
     const map = await this.service.getColumnValueMap(columnName as keyof Painting);
 
     return [...map.values()];
+  }
+
+  @Get('by-ids')
+  async getById(@Query() dto: FindPaintingQueryDTO) {
+    return this.service.getByIds(dto.ids);
   }
 
   @Post()
