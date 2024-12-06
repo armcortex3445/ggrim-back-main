@@ -29,6 +29,18 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
 - [x] get Paintings By Id list 
 - [x] create Painting 
 
+#### Tag Module
+- child module of Painting Module
+- HTTP Api is based on CRUD Lib
+    ref : https://gid-oss.github.io/dataui-nestjs-crud
+- [x] get Tag
+    - [x] provide logic by HTTP Api
+- [x] create Tag
+    - [x] provide logic by HTTP Api
+- [x] delete Tag
+    - [x] provide logic by HTTP Api
+- [x] replace Tag
+    - [x] provide logic by HTTP Api
 
 ### Quiz Module
 - [x] generate Random Quiz
