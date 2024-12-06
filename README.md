@@ -68,6 +68,19 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
 - [x] replace Tag
     - [x] provide logic by HTTP Api
 
+#### Style Module
+- child module of Painting Module
+- HTTP Api is based on CRUD Lib
+    ref : https://gid-oss.github.io/dataui-nestjs-crud
+- [x] get Style
+    - [x] provide logic by HTTP Api
+- [x] create Style
+    - [x] provide logic by HTTP Api
+- [x] delete Style
+    - [x] provide logic by HTTP Api
+- [x] replace Style
+    - [x] provide logic by HTTP Api
+
 ### Quiz Module
 - [x] generate Random Quiz
     - [x] provide logic by HTTP Api
