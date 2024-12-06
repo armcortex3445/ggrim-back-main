@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
-import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
-import { Painting } from './painting.entity';
+import { CustomBaseEntity } from '../../../../db/entity/custom.base.entity';
+import { Painting } from '../../../entities/painting.entity';
 
 @Entity()
 @Unique(['name'])

@@ -2,8 +2,8 @@ import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { isArrayEmpty } from '../../utils/validator';
-import { Tag } from '../entities/tag.entity';
+import { isArrayEmpty } from '../../../utils/validator';
+import { Tag } from './entities/tag.entity';
 
 @Injectable()
 export class TagService extends TypeOrmCrudService<Tag> {

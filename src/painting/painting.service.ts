@@ -1,4 +1,3 @@
-import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,13 +5,13 @@ import { ServiceException } from '../_common/filter/exception/service/service-ex
 import { ArtistService } from '../artist/artist.service';
 import { Artist } from '../artist/entities/artist.entity';
 import { isArrayEmpty, isNotFalsy } from '../utils/validator';
+import { Tag } from './child-module/tag/entities/tag.entity';
+import { TagService } from './child-module/tag/tag.service';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 import { Style } from './entities/style.entity';
-import { Tag } from './entities/tag.entity';
 import { StyleService } from './sub-service/style.service';
-import { TagService } from './sub-service/tag.service';
 
 export interface IPaginationResult<T> {
   data: T[];
@@ -30,15 +29,13 @@ export interface UpdateInfo {
 }
 
 @Injectable()
-export class PaintingService extends TypeOrmCrudService<Painting> {
+export class PaintingService {
   constructor(
-    @InjectRepository(Painting) repo: Repository<Painting>,
+    @InjectRepository(Painting) private readonly repo: Repository<Painting>,
     @Inject(TagService) private readonly tagService: TagService,
     @Inject(StyleService) private readonly styleService: StyleService,
     @Inject(ArtistService) private readonly artistService: ArtistService,
-  ) {
-    super(repo);
-  }
+  ) {}
   async create(dto: CreatePaintingDTO) {
     /*TODO
     - relation 데이터 삽입을 위한 로직 재사용성 및 성능 높이기
