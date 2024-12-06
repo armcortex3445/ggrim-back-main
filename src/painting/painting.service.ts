@@ -1,4 +1,3 @@
-import { TypeOrmCrudService } from '@dataui/crud-typeorm';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,13 +5,13 @@ import { ServiceException } from '../_common/filter/exception/service/service-ex
 import { ArtistService } from '../artist/artist.service';
 import { Artist } from '../artist/entities/artist.entity';
 import { isArrayEmpty, isNotFalsy } from '../utils/validator';
+import { Tag } from './child-module/tag/entities/tag.entity';
+import { TagService } from './child-module/tag/tag.service';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 import { Style } from './entities/style.entity';
-import { Tag } from './entities/tag.entity';
 import { StyleService } from './sub-service/style.service';
-import { TagService } from './sub-service/tag.service';
 
 export interface IPaginationResult<T> {
   data: T[];
