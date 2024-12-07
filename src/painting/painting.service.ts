@@ -43,29 +43,6 @@ export class PaintingService {
         - 쿼리 발생 횟수를 줄이기 위해서, 각각의 값을 앱에 저장하거나 DB cache를 사용한다.
         - decorator는 다른 dto에서도 사용할 수 있게 만든다.
     */
-    let tags: Tag[] = [];
-    if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
-      tags = await this.tagService.findManyByName(dto.tags);
-      if (isArrayEmpty(tags)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${JSON.stringify(dto.tags)}`,
-        );
-      }
-    }
-
-    let styles: Style[] = [];
-    if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
-      styles = await this.tagService.findManyByName(dto.styles);
-      if (isArrayEmpty(styles)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${JSON.stringify(dto.styles)}`,
-        );
-      }
-    }
 
     let artist: Artist | undefined = undefined;
     if (isNotFalsy(dto.artistName)) {
@@ -93,7 +70,7 @@ export class PaintingService {
     }
     //paintingName연결
 
-    const result = await this.repo
+    const query = this.repo
       .createQueryBuilder()
       .insert()
       .into(Painting)
@@ -106,15 +83,24 @@ export class PaintingService {
           height: dto.height,
           completition_year: dto.completition_year,
           artist,
-          tags,
-          styles,
         },
-      ])
-      .execute();
+      ]);
 
-    const ret = { ...result.generatedMaps };
+    Logger.debug(`[create] ${query.getSql()}`);
+    const result = await query.execute();
+    const newPainting: Painting = result.generatedMaps[0] as Painting;
 
-    return ret;
+    if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
+      await this.relateToStyle(newPainting, dto.styles);
+    }
+
+    if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
+      await this.relateToTag(newPainting, dto.tags);
+    }
+
+    const newPaintingFromDB = (await this.getByIds([newPainting.id]))[0];
+
+    return newPaintingFromDB;
   }
 
   async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
@@ -293,5 +279,65 @@ export class PaintingService {
     if (column === 'artist') {
       this.artistService.validateName(value);
     }
+  }
+
+  async relateToTag(painting: Painting, tagNames: string[]): Promise<void> {
+    const tags: Tag[] = [];
+    const delimiter = ', ';
+
+    const finds = await this.tagService.findManyByName(tagNames);
+    tags.push(...finds);
+    if (isArrayEmpty(tags)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found : ${tagNames.join(delimiter)}`,
+      );
+    }
+
+    if (tagNames.length !== tags.length) {
+      const tagsFounded = tags.map((tag) => tag.name);
+      const tagsNotFounded = tagNames.filter((name) => !tagsFounded.includes(name));
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found : ${tagsNotFounded.join(delimiter)}`,
+      );
+    }
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+
+    Logger.debug(`[insert tag] : ${query.getSql()}`);
+
+    await query.add(tags);
+  }
+
+  async relateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
+    const styles: Style[] = [];
+
+    const finds: Style[] = await this.styleService.findManyByName(styleNames);
+    styles.push(...finds);
+    if (isArrayEmpty(styles)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found : ${JSON.stringify(styleNames)}`,
+      );
+    }
+    if (styleNames.length !== styles.length) {
+      const stylesFounded = styles.map((style) => style.name);
+      const stylesNotFounded = styleNames.filter((name) => !stylesFounded.includes(name));
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found : ${stylesNotFounded.join(', ')}`,
+      );
+    }
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+
+    Logger.debug(`[insert styles] : ${query.getSql()}`);
+
+    await query.add(styles);
   }
 }
