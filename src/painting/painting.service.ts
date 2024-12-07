@@ -223,7 +223,12 @@ export class PaintingService {
   }
 
   async getByIds(ids: string[]): Promise<Painting[]> {
-    const query = this.repo.createQueryBuilder('p').select().where('p.id IN (:...ids)', { ids });
+    const query = this.repo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.tags', 'tags')
+      .leftJoinAndSelect('p.styles', 'styles')
+      .leftJoinAndSelect('p.artist', 'artist')
+      .where('p.id IN (:...ids)', { ids });
 
     Logger.debug(query.getSql());
 
