@@ -7,13 +7,16 @@ import {
   Logger,
   Param,
   ParseIntPipe,
+  ParseUUIDPipe,
   Post,
+  Put,
   Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { FindPaintingQueryDTO } from './dto/find-painting.query.dto';
+import { ReplacePaintingDTO } from './dto/replace-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 import { PaintingService } from './painting.service';
@@ -62,5 +65,12 @@ export class PaintingController {
   createPainting(@Body() body: CreatePaintingDTO) {
     Logger.debug(`[createPainting] ${JSON.stringify(body)}`);
     return this.service.create(body);
+  }
+
+  @Put('/:id')
+  async replacePainting(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReplacePaintingDTO) {
+    const targetPainting = (await this.service.getByIds([id]))[0];
+
+    return this.service.replace(targetPainting, dto);
   }
 }

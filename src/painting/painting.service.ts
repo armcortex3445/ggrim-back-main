@@ -10,6 +10,7 @@ import { StyleService } from './child-module/style/style.service';
 import { Tag } from './child-module/tag/entities/tag.entity';
 import { TagService } from './child-module/tag/tag.service';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
+import { ReplacePaintingDTO } from './dto/replace-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 
@@ -73,6 +74,49 @@ export class PaintingService {
     const newPaintingFromDB = (await this.getByIds([newPainting.id]))[0];
 
     return newPaintingFromDB;
+  }
+
+  async replace(painting: Painting, dto: ReplacePaintingDTO): Promise<Painting> {
+    const query = this.repo
+      .createQueryBuilder()
+      .update(Painting)
+      .set({
+        title: dto.title,
+        description: dto.description,
+        image_url: dto.image_url,
+        height: dto.height,
+        width: dto.width,
+        completition_year: dto.completition_year,
+      })
+      .where('painting.id = :paintingId', { paintingId: painting.id });
+
+    Logger.debug(`[PaintingService][replace] ${query.getSql()}`);
+    await query.execute();
+
+    if (painting.artist && painting.artist.name !== dto.artistName) {
+      await this.setArtist(painting, dto.artistName);
+    }
+
+    if (isNotFalsy(dto.tags)) {
+      await this.relateToTag(painting, dto.tags);
+      const tagNamesToOmit: string[] = painting.tags
+        .map((tag) => tag.name)
+        .filter((name) => !dto.tags.some((tagName) => tagName === name));
+      await this.notRelateToTag(painting, tagNamesToOmit);
+    }
+
+    if (isNotFalsy(dto.styles)) {
+      await this.relateToStyle(painting, dto.styles);
+      const styleNamesToOmit: string[] = painting.styles
+        .map((style) => style.name)
+        .filter((name) => !dto.styles.some((styleName) => styleName === name));
+
+      await this.notRelateToStyle(painting, styleNamesToOmit);
+    }
+
+    const updatedPaintingFromDB = (await this.getByIds([painting.id]))[0];
+
+    return updatedPaintingFromDB;
   }
 
   async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
