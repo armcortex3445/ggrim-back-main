@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { ArtistService } from '../artist/artist.service';
 import { Artist } from '../artist/entities/artist.entity';
-import { isArrayEmpty, isNotFalsy } from '../utils/validator';
+import { isArrayEmpty, isFalsy, isNotFalsy } from '../utils/validator';
 import { Style } from './child-module/style/entities/style.entity';
 import { StyleService } from './child-module/style/style.service';
 import { Tag } from './child-module/tag/entities/tag.entity';
@@ -36,32 +36,8 @@ export class PaintingService {
     @Inject(StyleService) private readonly styleService: StyleService,
     @Inject(ArtistService) private readonly artistService: ArtistService,
   ) {}
-  async create(dto: CreatePaintingDTO) {
+  async create(dto: CreatePaintingDTO): Promise<Painting> {
     let artist: Artist | undefined = undefined;
-    if (isNotFalsy(dto.artistName)) {
-      const artists = await this.artistService.find({
-        where: { name: dto.artistName },
-      });
-
-      if (artists.length > 1) {
-        throw new ServiceException(
-          'DB_INCONSISTENCY',
-          'INTERNAL_SERVER_ERROR',
-          `${dto.artistName} is multiple.\n
-        ${JSON.stringify(artists, null, 2)}`,
-        );
-      }
-
-      if (isArrayEmpty(artists)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${dto.artistName}`,
-        );
-      }
-      artist = artists[0];
-    }
-    //paintingName연결
 
     const query = this.repo
       .createQueryBuilder()
@@ -82,6 +58,9 @@ export class PaintingService {
     Logger.debug(`[create] ${query.getSql()}`);
     const result = await query.execute();
     const newPainting: Painting = result.generatedMaps[0] as Painting;
+    if (isNotFalsy(dto.artistName)) {
+      this.setArtist(newPainting, dto.artistName);
+    }
 
     if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
       await this.relateToStyle(newPainting, dto.styles);
@@ -275,28 +254,15 @@ export class PaintingService {
   }
 
   async relateToTag(painting: Painting, tagNames: string[]): Promise<void> {
-    const tags: Tag[] = [];
-    const delimiter = ', ';
+    const tagNamesToAdd: string[] = tagNames.filter(
+      (name) => !painting.tags.some((tag) => tag.name === name),
+    );
 
-    const finds = await this.tagService.findManyByName(tagNames);
-    tags.push(...finds);
-    if (isArrayEmpty(tags)) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `not found : ${tagNames.join(delimiter)}`,
-      );
+    if (isArrayEmpty(tagNamesToAdd)) {
+      return;
     }
 
-    if (tagNames.length !== tags.length) {
-      const tagsFounded = tags.map((tag) => tag.name);
-      const tagsNotFounded = tagNames.filter((name) => !tagsFounded.includes(name));
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `not found : ${tagsNotFounded.join(delimiter)}`,
-      );
-    }
+    const tags: Tag[] = await this.getTagsByName(tagNames);
 
     const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
 
@@ -306,31 +272,92 @@ export class PaintingService {
   }
 
   async relateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
-    const styles: Style[] = [];
+    const styleNamesToAdd: string[] = styleNames.filter(
+      (name) => !painting.styles.some((style) => style.name === name),
+    );
 
-    const finds: Style[] = await this.styleService.findManyByName(styleNames);
-    styles.push(...finds);
-    if (isArrayEmpty(styles)) {
+    if (isArrayEmpty(styleNamesToAdd)) {
+      return;
+    }
+
+    const stylesToAdd: Style[] = await this.getStylesByName(styleNames);
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+
+    Logger.debug(`[insert styles] : ${query.getSql()}`);
+
+    await query.add(stylesToAdd);
+  }
+  async setArtist(painting: Painting, artistName: string | undefined) {
+    const query = this.repo.createQueryBuilder().relation(Painting, 'artist').of(painting);
+
+    if (isFalsy(artistName)) {
+      await query.set(null);
+      return;
+    }
+
+    const artists = await this.artistService.find({
+      where: { name: artistName },
+    });
+
+    if (artists.length > 1) {
+      throw new ServiceException(
+        'DB_INCONSISTENCY',
+        'INTERNAL_SERVER_ERROR',
+        `${artistName} is multiple.\n
+      ${JSON.stringify(artists, null, 2)}`,
+      );
+    }
+
+    if (isArrayEmpty(artists)) {
       throw new ServiceException(
         'ENTITY_NOT_FOUND',
         'BAD_REQUEST',
-        `not found : ${JSON.stringify(styleNames)}`,
+        `not found artist : ${artistName}`,
       );
     }
+    const artist: Artist = artists[0];
+
+    await query.set(artist);
+  }
+
+  async getStylesByName(styleNames: string[]): Promise<Style[]> {
+    const delimiter = ', ';
+
+    const styles: Style[] = [];
+    const finds = await this.styleService.findManyByName(styleNames);
+    styles.push(...finds);
+
     if (styleNames.length !== styles.length) {
       const stylesFounded = styles.map((style) => style.name);
       const stylesNotFounded = styleNames.filter((name) => !stylesFounded.includes(name));
       throw new ServiceException(
         'ENTITY_NOT_FOUND',
         'BAD_REQUEST',
-        `not found : ${stylesNotFounded.join(', ')}`,
+        `not found styles : ${stylesNotFounded.join(delimiter)}`,
       );
     }
 
-    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+    return styles;
+  }
 
-    Logger.debug(`[insert styles] : ${query.getSql()}`);
+  async getTagsByName(tagNames: string[]): Promise<Tag[]> {
+    const funcName = this.notRelateToTag.name;
+    const delimiter = ', ';
+    const tags: Tag[] = [];
 
-    await query.add(styles);
+    const finds = await this.tagService.findManyByName(tagNames);
+    tags.push(...finds);
+
+    if (tagNames.length !== tags.length) {
+      const tagsFounded = tags.map((tag) => tag.name);
+      const tagsNotFounded = tagNames.filter((name) => !tagsFounded.includes(name));
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `[${funcName}]not found tags : ${tagsNotFounded.join(delimiter)}`,
+      );
+    }
+    return tags;
   }
 }
