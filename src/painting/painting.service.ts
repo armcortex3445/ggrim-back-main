@@ -420,4 +420,18 @@ export class PaintingService {
     }
     return tags;
   }
+
+  async deleteOne(painting: Painting) {
+    const query = this.repo
+      .createQueryBuilder()
+      .softDelete()
+      .from(Painting)
+      .where('id = :idToDeleted', { idToDeleted: painting.id });
+
+    Logger.debug(`[deleteOne] ${query.getSql()}`);
+
+    const result = await query.execute();
+
+    return result.affected;
+  }
 }
