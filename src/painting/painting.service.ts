@@ -271,6 +271,13 @@ export class PaintingService {
     await query.add(tags);
   }
 
+  async notRelateToTag(painting: Painting, tagNames: string[]) {
+    const tags: Tag[] = await this.getTagsByName(tagNames);
+    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+
+    await query.remove(tags);
+  }
+
   async relateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
     const styleNamesToAdd: string[] = styleNames.filter(
       (name) => !painting.styles.some((style) => style.name === name),
@@ -288,6 +295,15 @@ export class PaintingService {
 
     await query.add(stylesToAdd);
   }
+
+  async notRelateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
+    const stylesToOmit: Style[] = await this.getStylesByName(styleNames);
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+
+    await query.remove(stylesToOmit);
+  }
+
   async setArtist(painting: Painting, artistName: string | undefined) {
     const query = this.repo.createQueryBuilder().relation(Painting, 'artist').of(painting);
 
