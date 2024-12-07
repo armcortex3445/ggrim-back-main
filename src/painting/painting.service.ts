@@ -37,13 +37,6 @@ export class PaintingService {
     @Inject(ArtistService) private readonly artistService: ArtistService,
   ) {}
   async create(dto: CreatePaintingDTO) {
-    /*TODO
-    - relation 데이터 삽입을 위한 로직 재사용성 및 성능 높이기
-      - 방법 1) 각각의 값이 DB에 존재하는지 검증하는 validator decorator를 구현한다.
-        - 쿼리 발생 횟수를 줄이기 위해서, 각각의 값을 앱에 저장하거나 DB cache를 사용한다.
-        - decorator는 다른 dto에서도 사용할 수 있게 만든다.
-    */
-
     let artist: Artist | undefined = undefined;
     if (isNotFalsy(dto.artistName)) {
       const artists = await this.artistService.find({
