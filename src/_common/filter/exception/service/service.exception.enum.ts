@@ -1,5 +1,6 @@
 export const ServiceExceptionEnum = {
   BASE: 30000,
+  NOT_IMPLEMENTED: 30001,
 
   //Related to typeORM Entity task
   ENTITY_NOT_FOUND: 31000,
