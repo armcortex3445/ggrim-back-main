@@ -1,9 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { ArtistService } from '../artist/artist.service';
 import { Artist } from '../artist/entities/artist.entity';
+import { createTransactionQueryBuilder } from '../db/query-runner/query-Runner.lib';
 import { isArrayEmpty, isFalsy, isNotFalsy } from '../utils/validator';
 import { Style } from './child-module/style/entities/style.entity';
 import { StyleService } from './child-module/style/style.service';
@@ -14,21 +15,6 @@ import { ReplacePaintingDTO } from './dto/replace-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 
-export interface IPaginationResult<T> {
-  data: T[];
-  count: number;
-  pagination: number;
-  isMore?: boolean;
-}
-export interface IResult<T> {
-  data: T | null | undefined;
-}
-
-export interface UpdateInfo {
-  targetId: string;
-  isSuccess: boolean;
-}
-
 @Injectable()
 export class PaintingService {
   constructor(
@@ -37,11 +23,11 @@ export class PaintingService {
     @Inject(StyleService) private readonly styleService: StyleService,
     @Inject(ArtistService) private readonly artistService: ArtistService,
   ) {}
-  async create(dto: CreatePaintingDTO): Promise<Painting> {
+
+  async create(queryRunner: QueryRunner, dto: CreatePaintingDTO): Promise<Painting> {
     let artist: Artist | undefined = undefined;
 
-    const query = this.repo
-      .createQueryBuilder()
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
       .insert()
       .into(Painting)
       .values([
@@ -60,25 +46,26 @@ export class PaintingService {
     const result = await query.execute();
     const newPainting: Painting = result.generatedMaps[0] as Painting;
     if (isNotFalsy(dto.artistName)) {
-      this.setArtist(newPainting, dto.artistName);
+      await this.setArtist(queryRunner, newPainting, dto.artistName);
     }
 
     if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
-      await this.relateToStyle(newPainting, dto.styles);
+      await this.relateToStyle(queryRunner, newPainting, dto.styles);
     }
 
     if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
-      await this.relateToTag(newPainting, dto.tags);
+      await this.relateToTag(queryRunner, newPainting, dto.tags);
     }
 
-    const newPaintingFromDB = await this.findPaintingOrThrow(newPainting.id);
-
-    return newPaintingFromDB;
+    return result.generatedMaps[0] as Painting;
   }
 
-  async replace(painting: Painting, dto: ReplacePaintingDTO): Promise<Painting> {
-    const query = this.repo
-      .createQueryBuilder()
+  async replace(
+    queryRunner: QueryRunner,
+    painting: Painting,
+    dto: ReplacePaintingDTO,
+  ): Promise<Painting> {
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
       .update(Painting)
       .set({
         title: dto.title,
@@ -91,32 +78,30 @@ export class PaintingService {
       .where('painting.id = :paintingId', { paintingId: painting.id });
 
     Logger.debug(`[PaintingService][replace] ${query.getSql()}`);
-    await query.execute();
+    const result = await query.execute();
 
     if (painting.artist && painting.artist.name !== dto.artistName) {
-      await this.setArtist(painting, dto.artistName);
+      await this.setArtist(queryRunner, painting, dto.artistName);
     }
 
     if (isNotFalsy(dto.tags)) {
-      await this.relateToTag(painting, dto.tags);
+      await this.relateToTag(queryRunner, painting, dto.tags);
       const tagNamesToOmit: string[] = painting.tags
         .map((tag) => tag.name)
         .filter((name) => !dto.tags.some((tagName) => tagName === name));
-      await this.notRelateToTag(painting, tagNamesToOmit);
+      await this.notRelateToTag(queryRunner, painting, tagNamesToOmit);
     }
 
     if (isNotFalsy(dto.styles)) {
-      await this.relateToStyle(painting, dto.styles);
+      await this.relateToStyle(queryRunner, painting, dto.styles);
       const styleNamesToOmit: string[] = painting.styles
         .map((style) => style.name)
         .filter((name) => !dto.styles.some((styleName) => styleName === name));
 
-      await this.notRelateToStyle(painting, styleNamesToOmit);
+      await this.notRelateToStyle(queryRunner, painting, styleNamesToOmit);
     }
 
-    const updatedPaintingFromDB = await this.findPaintingOrThrow(painting.id);
-
-    return updatedPaintingFromDB;
+    return result.generatedMaps[0] as Painting;
   }
 
   async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
@@ -297,10 +282,16 @@ export class PaintingService {
     }
   }
 
-  async relateToTag(painting: Painting, tagNames: string[]): Promise<void> {
-    const tagNamesToAdd: string[] = tagNames.filter(
-      (name) => !painting.tags.some((tag) => tag.name === name),
-    );
+  async relateToTag(
+    queryRunner: QueryRunner,
+    painting: Painting,
+    tagNames: string[],
+  ): Promise<void> {
+    let tagNamesToAdd: string[] = [...tagNames];
+
+    if (isNotFalsy(painting.tags)) {
+      tagNamesToAdd = tagNames.filter((name) => !painting.tags.some((tag) => tag.name === name));
+    }
 
     if (isArrayEmpty(tagNamesToAdd)) {
       return;
@@ -308,24 +299,36 @@ export class PaintingService {
 
     const tags: Tag[] = await this.getTagsByName(tagNames);
 
-    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
+      .relation(Painting, 'tags')
+      .of(painting);
 
     Logger.debug(`[insert tag] : ${query.getSql()}`);
 
     await query.add(tags);
   }
 
-  async notRelateToTag(painting: Painting, tagNames: string[]) {
+  async notRelateToTag(queryRunner: QueryRunner, painting: Painting, tagNames: string[]) {
     const tags: Tag[] = await this.getTagsByName(tagNames);
-    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
+      .relation(Painting, 'tags')
+      .of(painting);
 
     await query.remove(tags);
   }
 
-  async relateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
-    const styleNamesToAdd: string[] = styleNames.filter(
-      (name) => !painting.styles.some((style) => style.name === name),
-    );
+  async relateToStyle(
+    queryRunner: QueryRunner,
+    painting: Painting,
+    styleNames: string[],
+  ): Promise<void> {
+    let styleNamesToAdd: string[] = [...styleNames];
+
+    if (isNotFalsy(painting.styles)) {
+      styleNamesToAdd = styleNames.filter(
+        (name) => !painting.styles.some((style) => style.name === name),
+      );
+    }
 
     if (isArrayEmpty(styleNamesToAdd)) {
       return;
@@ -333,23 +336,33 @@ export class PaintingService {
 
     const stylesToAdd: Style[] = await this.getStylesByName(styleNames);
 
-    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
+      .relation(Painting, 'styles')
+      .of(painting);
 
     Logger.debug(`[insert styles] : ${query.getSql()}`);
 
     await query.add(stylesToAdd);
   }
 
-  async notRelateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
+  async notRelateToStyle(
+    queryRunner: QueryRunner,
+    painting: Painting,
+    styleNames: string[],
+  ): Promise<void> {
     const stylesToOmit: Style[] = await this.getStylesByName(styleNames);
 
-    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
+      .relation(Painting, 'styles')
+      .of(painting);
 
     await query.remove(stylesToOmit);
   }
 
-  async setArtist(painting: Painting, artistName: string | undefined) {
-    const query = this.repo.createQueryBuilder().relation(Painting, 'artist').of(painting);
+  async setArtist(queryRunner: QueryRunner, painting: Painting, artistName: string | undefined) {
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
+      .relation(Painting, 'artist')
+      .of(painting);
 
     if (isFalsy(artistName)) {
       await query.set(null);
@@ -421,9 +434,8 @@ export class PaintingService {
     return tags;
   }
 
-  async deleteOne(painting: Painting) {
-    const query = this.repo
-      .createQueryBuilder()
+  async deleteOne(queryRunner: QueryRunner, painting: Painting) {
+    const query = createTransactionQueryBuilder(queryRunner, Painting)
       .softDelete()
       .from(Painting)
       .where('id = :idToDeleted', { idToDeleted: painting.id });
