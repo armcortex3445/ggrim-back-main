@@ -5,16 +5,19 @@ import {
   Delete,
   Get,
   Inject,
-  Logger,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
   Query,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { QueryRunner } from 'typeorm';
+import { DBQueryRunner } from '../db/query-runner/decorator/query-runner.decorator';
+import { QueryRunnerInterceptor } from '../db/query-runner/query-runner.interceptor';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { FindPaintingQueryDTO } from './dto/find-painting.query.dto';
 import { ReplacePaintingDTO } from './dto/replace-painting.dto';
@@ -63,21 +66,30 @@ export class PaintingController {
   }
 
   @Post()
-  createPainting(@Body() body: CreatePaintingDTO) {
-    Logger.debug(`[createPainting] ${JSON.stringify(body)}`);
-    return this.service.create(body);
+  @UseInterceptors(QueryRunnerInterceptor)
+  createPainting(@DBQueryRunner() queryRunner: QueryRunner, @Body() body: CreatePaintingDTO) {
+    return this.service.create(queryRunner, body);
   }
 
   @Put('/:id')
-  async replacePainting(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReplacePaintingDTO) {
+  @UseInterceptors(QueryRunnerInterceptor)
+  async replacePainting(
+    @DBQueryRunner() queryRunner: QueryRunner,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ReplacePaintingDTO,
+  ) {
     const targetPainting = await this.service.findPaintingOrThrow(id);
 
-    return this.service.replace(targetPainting, dto);
+    return this.service.replace(queryRunner, targetPainting, dto);
   }
 
   @Delete('/:id')
-  async deletePainting(@Param('id', ParseUUIDPipe) id: string) {
+  @UseInterceptors(QueryRunnerInterceptor)
+  async deletePainting(
+    @DBQueryRunner() queryRunner: QueryRunner,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
     const targetPainting = await this.service.findPaintingOrThrow(id);
-    return this.service.deleteOne(targetPainting);
+    return this.service.deleteOne(queryRunner, targetPainting);
   }
 }
