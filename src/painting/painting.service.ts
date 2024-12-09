@@ -71,7 +71,7 @@ export class PaintingService {
       await this.relateToTag(newPainting, dto.tags);
     }
 
-    const newPaintingFromDB = (await this.getByIds([newPainting.id]))[0];
+    const newPaintingFromDB = await this.findPaintingOrThrow(newPainting.id);
 
     return newPaintingFromDB;
   }
@@ -114,7 +114,7 @@ export class PaintingService {
       await this.notRelateToStyle(painting, styleNamesToOmit);
     }
 
-    const updatedPaintingFromDB = (await this.getByIds([painting.id]))[0];
+    const updatedPaintingFromDB = await this.findPaintingOrThrow(painting.id);
 
     return updatedPaintingFromDB;
   }
@@ -433,5 +433,17 @@ export class PaintingService {
     const result = await query.execute();
 
     return result.affected;
+  }
+
+  public async findPaintingOrThrow(id: string): Promise<Painting> {
+    const painting = (await this.getByIds([id]))[0];
+    if (isFalsy(painting)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found painting. id : ${id}\n`,
+      );
+    }
+    return painting;
   }
 }

@@ -15,8 +15,6 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ServiceException } from '../_common/filter/exception/service/service-exception';
-import { isFalsy } from '../utils/validator';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { FindPaintingQueryDTO } from './dto/find-painting.query.dto';
 import { ReplacePaintingDTO } from './dto/replace-painting.dto';
@@ -72,28 +70,14 @@ export class PaintingController {
 
   @Put('/:id')
   async replacePainting(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ReplacePaintingDTO) {
-    const targetPainting = (await this.service.getByIds([id]))[0];
-    if (isFalsy(targetPainting)) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `not found painting. id : ${id}\n`,
-      );
-    }
+    const targetPainting = await this.service.findPaintingOrThrow(id);
 
     return this.service.replace(targetPainting, dto);
   }
 
   @Delete('/:id')
   async deletePainting(@Param('id', ParseUUIDPipe) id: string) {
-    const targetPainting = (await this.service.getByIds([id]))[0];
-    if (isFalsy(targetPainting)) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `not found painting. id : ${id}\n`,
-      );
-    }
+    const targetPainting = await this.service.findPaintingOrThrow(id);
     return this.service.deleteOne(targetPainting);
   }
 }
