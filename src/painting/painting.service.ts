@@ -4,12 +4,13 @@ import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { ArtistService } from '../artist/artist.service';
 import { Artist } from '../artist/entities/artist.entity';
-import { isArrayEmpty, isNotFalsy } from '../utils/validator';
+import { isArrayEmpty, isFalsy, isNotFalsy } from '../utils/validator';
 import { Style } from './child-module/style/entities/style.entity';
 import { StyleService } from './child-module/style/style.service';
 import { Tag } from './child-module/tag/entities/tag.entity';
 import { TagService } from './child-module/tag/tag.service';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
+import { ReplacePaintingDTO } from './dto/replace-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
 
@@ -36,64 +37,10 @@ export class PaintingService {
     @Inject(StyleService) private readonly styleService: StyleService,
     @Inject(ArtistService) private readonly artistService: ArtistService,
   ) {}
-  async create(dto: CreatePaintingDTO) {
-    /*TODO
-    - relation 데이터 삽입을 위한 로직 재사용성 및 성능 높이기
-      - 방법 1) 각각의 값이 DB에 존재하는지 검증하는 validator decorator를 구현한다.
-        - 쿼리 발생 횟수를 줄이기 위해서, 각각의 값을 앱에 저장하거나 DB cache를 사용한다.
-        - decorator는 다른 dto에서도 사용할 수 있게 만든다.
-    */
-    let tags: Tag[] = [];
-    if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
-      tags = await this.tagService.findManyByName(dto.tags);
-      if (isArrayEmpty(tags)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${JSON.stringify(dto.tags)}`,
-        );
-      }
-    }
-
-    let styles: Style[] = [];
-    if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
-      styles = await this.tagService.findManyByName(dto.styles);
-      if (isArrayEmpty(styles)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${JSON.stringify(dto.styles)}`,
-        );
-      }
-    }
-
+  async create(dto: CreatePaintingDTO): Promise<Painting> {
     let artist: Artist | undefined = undefined;
-    if (isNotFalsy(dto.artistName)) {
-      const artists = await this.artistService.find({
-        where: { name: dto.artistName },
-      });
 
-      if (artists.length > 1) {
-        throw new ServiceException(
-          'DB_INCONSISTENCY',
-          'INTERNAL_SERVER_ERROR',
-          `${dto.artistName} is multiple.\n
-        ${JSON.stringify(artists, null, 2)}`,
-        );
-      }
-
-      if (isArrayEmpty(artists)) {
-        throw new ServiceException(
-          'ENTITY_NOT_FOUND',
-          'BAD_REQUEST',
-          `not found : ${dto.artistName}`,
-        );
-      }
-      artist = artists[0];
-    }
-    //paintingName연결
-
-    const result = await this.repo
+    const query = this.repo
       .createQueryBuilder()
       .insert()
       .into(Painting)
@@ -106,15 +53,70 @@ export class PaintingService {
           height: dto.height,
           completition_year: dto.completition_year,
           artist,
-          tags,
-          styles,
         },
-      ])
-      .execute();
+      ]);
 
-    const ret = { ...result.generatedMaps };
+    Logger.debug(`[create] ${query.getSql()}`);
+    const result = await query.execute();
+    const newPainting: Painting = result.generatedMaps[0] as Painting;
+    if (isNotFalsy(dto.artistName)) {
+      this.setArtist(newPainting, dto.artistName);
+    }
 
-    return ret;
+    if (isNotFalsy(dto.styles) && !isArrayEmpty(dto.styles)) {
+      await this.relateToStyle(newPainting, dto.styles);
+    }
+
+    if (isNotFalsy(dto.tags) && !isArrayEmpty(dto.tags)) {
+      await this.relateToTag(newPainting, dto.tags);
+    }
+
+    const newPaintingFromDB = await this.findPaintingOrThrow(newPainting.id);
+
+    return newPaintingFromDB;
+  }
+
+  async replace(painting: Painting, dto: ReplacePaintingDTO): Promise<Painting> {
+    const query = this.repo
+      .createQueryBuilder()
+      .update(Painting)
+      .set({
+        title: dto.title,
+        description: dto.description,
+        image_url: dto.image_url,
+        height: dto.height,
+        width: dto.width,
+        completition_year: dto.completition_year,
+      })
+      .where('painting.id = :paintingId', { paintingId: painting.id });
+
+    Logger.debug(`[PaintingService][replace] ${query.getSql()}`);
+    await query.execute();
+
+    if (painting.artist && painting.artist.name !== dto.artistName) {
+      await this.setArtist(painting, dto.artistName);
+    }
+
+    if (isNotFalsy(dto.tags)) {
+      await this.relateToTag(painting, dto.tags);
+      const tagNamesToOmit: string[] = painting.tags
+        .map((tag) => tag.name)
+        .filter((name) => !dto.tags.some((tagName) => tagName === name));
+      await this.notRelateToTag(painting, tagNamesToOmit);
+    }
+
+    if (isNotFalsy(dto.styles)) {
+      await this.relateToStyle(painting, dto.styles);
+      const styleNamesToOmit: string[] = painting.styles
+        .map((style) => style.name)
+        .filter((name) => !dto.styles.some((styleName) => styleName === name));
+
+      await this.notRelateToStyle(painting, styleNamesToOmit);
+    }
+
+    const updatedPaintingFromDB = await this.findPaintingOrThrow(painting.id);
+
+    return updatedPaintingFromDB;
   }
 
   async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
@@ -223,7 +225,12 @@ export class PaintingService {
   }
 
   async getByIds(ids: string[]): Promise<Painting[]> {
-    const query = this.repo.createQueryBuilder('p').select().where('p.id IN (:...ids)', { ids });
+    const query = this.repo
+      .createQueryBuilder('p')
+      .leftJoinAndSelect('p.tags', 'tags')
+      .leftJoinAndSelect('p.styles', 'styles')
+      .leftJoinAndSelect('p.artist', 'artist')
+      .where('p.id IN (:...ids)', { ids });
 
     Logger.debug(query.getSql());
 
@@ -288,5 +295,155 @@ export class PaintingService {
     if (column === 'artist') {
       this.artistService.validateName(value);
     }
+  }
+
+  async relateToTag(painting: Painting, tagNames: string[]): Promise<void> {
+    const tagNamesToAdd: string[] = tagNames.filter(
+      (name) => !painting.tags.some((tag) => tag.name === name),
+    );
+
+    if (isArrayEmpty(tagNamesToAdd)) {
+      return;
+    }
+
+    const tags: Tag[] = await this.getTagsByName(tagNames);
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+
+    Logger.debug(`[insert tag] : ${query.getSql()}`);
+
+    await query.add(tags);
+  }
+
+  async notRelateToTag(painting: Painting, tagNames: string[]) {
+    const tags: Tag[] = await this.getTagsByName(tagNames);
+    const query = this.repo.createQueryBuilder().relation(Painting, 'tags').of(painting);
+
+    await query.remove(tags);
+  }
+
+  async relateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
+    const styleNamesToAdd: string[] = styleNames.filter(
+      (name) => !painting.styles.some((style) => style.name === name),
+    );
+
+    if (isArrayEmpty(styleNamesToAdd)) {
+      return;
+    }
+
+    const stylesToAdd: Style[] = await this.getStylesByName(styleNames);
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+
+    Logger.debug(`[insert styles] : ${query.getSql()}`);
+
+    await query.add(stylesToAdd);
+  }
+
+  async notRelateToStyle(painting: Painting, styleNames: string[]): Promise<void> {
+    const stylesToOmit: Style[] = await this.getStylesByName(styleNames);
+
+    const query = this.repo.createQueryBuilder().relation(Painting, 'styles').of(painting);
+
+    await query.remove(stylesToOmit);
+  }
+
+  async setArtist(painting: Painting, artistName: string | undefined) {
+    const query = this.repo.createQueryBuilder().relation(Painting, 'artist').of(painting);
+
+    if (isFalsy(artistName)) {
+      await query.set(null);
+      return;
+    }
+
+    const artists = await this.artistService.find({
+      where: { name: artistName },
+    });
+
+    if (artists.length > 1) {
+      throw new ServiceException(
+        'DB_INCONSISTENCY',
+        'INTERNAL_SERVER_ERROR',
+        `${artistName} is multiple.\n
+      ${JSON.stringify(artists, null, 2)}`,
+      );
+    }
+
+    if (isArrayEmpty(artists)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found artist : ${artistName}`,
+      );
+    }
+    const artist: Artist = artists[0];
+
+    await query.set(artist);
+  }
+
+  async getStylesByName(styleNames: string[]): Promise<Style[]> {
+    const delimiter = ', ';
+
+    const styles: Style[] = [];
+    const finds = await this.styleService.findManyByName(styleNames);
+    styles.push(...finds);
+
+    if (styleNames.length !== styles.length) {
+      const stylesFounded = styles.map((style) => style.name);
+      const stylesNotFounded = styleNames.filter((name) => !stylesFounded.includes(name));
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found styles : ${stylesNotFounded.join(delimiter)}`,
+      );
+    }
+
+    return styles;
+  }
+
+  async getTagsByName(tagNames: string[]): Promise<Tag[]> {
+    const funcName = this.notRelateToTag.name;
+    const delimiter = ', ';
+    const tags: Tag[] = [];
+
+    const finds = await this.tagService.findManyByName(tagNames);
+    tags.push(...finds);
+
+    if (tagNames.length !== tags.length) {
+      const tagsFounded = tags.map((tag) => tag.name);
+      const tagsNotFounded = tagNames.filter((name) => !tagsFounded.includes(name));
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `[${funcName}]not found tags : ${tagsNotFounded.join(delimiter)}`,
+      );
+    }
+    return tags;
+  }
+
+  async deleteOne(painting: Painting) {
+    const query = this.repo
+      .createQueryBuilder()
+      .softDelete()
+      .from(Painting)
+      .where('id = :idToDeleted', { idToDeleted: painting.id });
+
+    Logger.debug(`[deleteOne] ${query.getSql()}`);
+
+    const result = await query.execute();
+
+    return result.affected;
+  }
+
+  public async findPaintingOrThrow(id: string): Promise<Painting> {
+    const painting = (await this.getByIds([id]))[0];
+    if (isFalsy(painting)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `not found painting. id : ${id}\n`,
+      );
+    }
+    return painting;
   }
 }

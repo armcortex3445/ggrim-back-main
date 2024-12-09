@@ -7,6 +7,11 @@ interface CauseInfo {
   innerError: unknown;
   stack: string;
 }
+
+/*TODO
+- client request에 대해 exception 발생시, exception에 대한 정보 응답에 넣기
+  - HTTP warning 레벨과 error 레벨에 대해 다르게 정보를 구성해야하는가?
+*/
 interface IExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
   message: string | object;
   cause?: CauseInfo;

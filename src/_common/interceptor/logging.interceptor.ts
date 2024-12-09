@@ -1,10 +1,8 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { finalize, tap } from 'rxjs/operators';
-import { Response, Request } from 'express';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { isObject, isString } from 'class-validator';
-import { emit } from 'process';
+import { Request, Response } from 'express';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { LoggerService } from '../../Logger/logger.service';
 import { NODE_ENV } from '../const/env-keys.const';
 
@@ -99,6 +97,9 @@ export class HttpLoggingInterceptor implements NestInterceptor {
       `Body: ${JSON.stringify(body, null, 2)}\n` +
       `Headers: ${JSON.stringify(headers, null, 2)}\n`;
 
+    /*TODO
+        - Pipe 또는 Validation 경고 문장 로그로 출력하기
+      */
     if (httpStatus < 500) {
       this.logger.warn(format, {
         className: this.className,

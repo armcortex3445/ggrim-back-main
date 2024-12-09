@@ -54,6 +54,11 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
     - [x] provide logic by HTTP Api
 - [x] get Paintings By Id list 
 - [x] create Painting 
+    - [x] provide logic by HTTP Api
+- [x] replace Painting
+    - [x] provide logic by HTTP Api
+- [x] delete Painting
+    - [x] provide logic by HTTP Api
 
 #### Tag Module
 - child module of Painting Module
