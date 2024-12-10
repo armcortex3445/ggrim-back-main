@@ -1,5 +1,6 @@
 import { ArgumentsHost, ExceptionFilter, HttpStatus, Inject } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { TypeORMError } from 'typeorm';
 import { LoggerService } from '../../Logger/logger.service';
 import { BaseException } from './exception/base.exception';
 
@@ -12,7 +13,7 @@ interface CauseInfo {
 - client request에 대해 exception 발생시, exception에 대한 정보 응답에 넣기
   - HTTP warning 레벨과 error 레벨에 대해 다르게 정보를 구성해야하는가?
 */
-interface IExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
+interface ExceptionInfo extends Pick<BaseException, 'timestamp' | 'path'> {
   message: string | object;
   cause?: CauseInfo;
   error?: unknown;
@@ -33,36 +34,17 @@ export class CustomExceptionFilter implements ExceptionFilter {
       const req = ctx.getRequest<Request>();
       const res = ctx.getResponse<Response>();
 
-      exception.timestamp = new Date().toLocaleTimeString('kr');
-      exception.path = req.url;
+      this.handleHttpException(req, res, exception);
+    }
 
-      if (exception instanceof BaseException) {
-        this.logBaseException(exception);
-        res.status(exception.getStatus()).json({
-          errorCode: exception.errorCode,
-          statusCode: exception.getStatus(),
-          timeStamp: exception.timestamp,
-          path: exception.path,
-          message: exception.message,
-        });
-      } else {
-        this.logUnknownException(exception);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-          timeStamp: exception.timestamp,
-          path: exception.path,
-          message: exception.message,
-        });
-      }
-    }
-        className: this.className,
-        traceId: exception.traceId,
-      });
-    }
+    this.logger.error(`unsupported host type[${host.getType()} access`, exception.stack, {
+      className: this.className,
+      traceId: exception.traceId,
+    });
   }
 
   private logBaseException(exception: BaseException) {
-    const info: IExceptionInfo = {
+    const info: ExceptionInfo = {
       timestamp: exception.timestamp,
       path: exception.path,
       message: exception.getResponse(),
@@ -83,7 +65,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
   }
 
   private logUnknownException(e: any) {
-    const info: IExceptionInfo = {
+    const info: ExceptionInfo = {
       timestamp: e.timeStamp,
       path: e.path,
       message: e,
@@ -116,5 +98,34 @@ export class CustomExceptionFilter implements ExceptionFilter {
     };
 
     return ret;
+  }
+
+  handleHttpException(request: Request, response: Response, exception: any) {
+    exception.timestamp = new Date().toLocaleTimeString('kr');
+    exception.path = request.url;
+
+    if (exception instanceof BaseException) {
+      this.logBaseException(exception);
+      response.status(exception.getStatus()).json({
+        errorCode: exception.errorCode,
+        statusCode: exception.getStatus(),
+        timeStamp: exception.timestamp,
+        path: exception.path,
+        message: exception.message,
+      });
+
+      return;
+    }
+
+    if (exception instanceof TypeORMError) {
+    }
+
+    this.logUnknownException(exception);
+    response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      timeStamp: exception.timestamp,
+      path: exception.path,
+      message: exception.message,
+    });
   }
 }
