@@ -43,6 +43,7 @@ export class CustomExceptionFilter implements ExceptionFilter {
           statusCode: exception.getStatus(),
           timeStamp: exception.timestamp,
           path: exception.path,
+          message: exception.message,
         });
       } else {
         this.logUnknownException(exception);
@@ -50,10 +51,10 @@ export class CustomExceptionFilter implements ExceptionFilter {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           timeStamp: exception.timestamp,
           path: exception.path,
+          message: exception.message,
         });
       }
-    } else {
-      this.logger.error(`unsupport host type[${host.getType()} access`, exception.stack, {
+    }
         className: this.className,
         traceId: exception.traceId,
       });
