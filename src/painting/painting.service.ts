@@ -104,6 +104,17 @@ export class PaintingService {
     return result.generatedMaps[0] as Painting;
   }
 
+  /*TODO
+    - 함수 동작 사양 주석 양식 만들기
+  */
+  /* Feature
+
+    - title 또는 artistId가 null인 행은 검색 대상에서 제외됨. 
+
+    - 반환값 
+      - tag가 없다면, 빈 배열 반환
+      - styles가 업더라도, 빈 배열 반환
+  */
   async searchPainting(dto: SearchPaintingDTO, page: number, paginationCount: number) {
     /*TODO
     - 입력된 tag와 style이 유효한지 점검하기
