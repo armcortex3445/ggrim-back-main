@@ -1,11 +1,17 @@
-import { Crud, CrudController } from '@dataui/crud';
-import { Controller, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Crud, CrudController, CrudRequest } from '@dataui/crud';
+import { Body, Controller, Post, Put, UsePipes, ValidationPipe } from '@nestjs/common';
+import { ServiceException } from '../../../_common/filter/exception/service/service-exception';
 import { CreateTagDTO } from './dto/create-tag.dto';
 import { ReplaceTagDTO } from './dto/replace-tag.dto';
 import { Tag } from './entities/tag.entity';
 import { TagService } from './tag.service';
 const EXCLUDED_COLUMN = ['created_date', 'updated_date', 'deleted_date', 'version'] as const;
 
+/*TODO
+- typeORM 에러 발생시, 특정 에러 메세지는 응답에 포함시켜 보내는 로직 구현 고려
+  1) unique constraint 열에 중복된 값을 삽입할 때,
+
+*/
 @Crud({
   model: {
     type: Tag,
@@ -18,7 +24,7 @@ const EXCLUDED_COLUMN = ['created_date', 'updated_date', 'deleted_date', 'versio
     },
   },
   routes: {
-    only: ['getOneBase', 'getManyBase', 'createOneBase', 'replaceOneBase', 'deleteOneBase'],
+    only: ['getOneBase', 'getManyBase', 'deleteOneBase'],
   },
   dto: {
     create: CreateTagDTO,
@@ -46,5 +52,32 @@ export class TagController implements CrudController<Tag> {
 
   get base(): CrudController<Tag> {
     return this;
+  }
+
+  @Post()
+  async create(@Body() dto: CreateTagDTO): Promise<Tag> {
+    /*TODO
+      - typeORM에서 발샌한 오류를 처리하는 ExceptionFilter 구현하기
+        - 오류 status 마다 동작 사항 핸들러 정의하기
+          예시) error.code === '23505' 인 경우, ServiceException을 발생시켜서 사용자에가 정보 알리기
+        -
+    */
+
+    const newTag: Tag = await this.service.addCreatingTagToQueue(dto);
+
+    return newTag;
+  }
+
+  @Put()
+  async replace(@Body() dto: ReplaceTagDTO): Promise<Tag> {
+    const existedEntity: Tag | null = await this.service.findOne({ where: { name: dto.name } });
+
+    if (existedEntity) {
+      throw new ServiceException('DB_CONFLICT', 'CONFLICT', `${dto.name} is already exist`);
+    }
+
+    const updatedTag: Tag = await this.service.replaceOne({} as CrudRequest, dto);
+
+    return updatedTag;
   }
 }
