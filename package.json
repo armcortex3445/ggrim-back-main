@@ -25,7 +25,6 @@
     "typeorm:create-migration": "cross-env node -e \"console.log(`--name=${process.env.npm_config_name}`); require(`child_process`).execSync(`npm run typeorm migration:create -- ./migration/action/${process.env.npm_config_name}`, { stdio: `inherit` })\"",
     "typeorm:run-migration": "npm run typeorm migration:run -- -d ./migration.option.ts",
     "typeorm:revert-migration": "npm run typeorm migration:revert -- -d ./migration.option.ts"
-
   },
   "dependencies": {
     "@dataui/crud": "^5.3.4",
