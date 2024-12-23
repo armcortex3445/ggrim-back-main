@@ -63,7 +63,7 @@ export class TagController implements CrudController<Tag> {
         -
     */
 
-    const newTag: Tag = await this.service.addCreatingTagToQueue(dto);
+    const newTag: Tag = await this.service.insertCreateDtoToQueue(dto);
 
     return newTag;
   }
