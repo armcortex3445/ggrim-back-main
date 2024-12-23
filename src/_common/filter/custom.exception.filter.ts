@@ -35,9 +35,10 @@ export class CustomExceptionFilter implements ExceptionFilter {
       const res = ctx.getResponse<Response>();
 
       this.handleHttpException(req, res, exception);
+      return;
     }
 
-    this.logger.error(`unsupported host type[${host.getType()} access`, exception.stack, {
+    this.logger.error(`unsupported host type[${host.getType()}] access`, exception.stack, {
       className: this.className,
       traceId: exception.traceId,
     });
