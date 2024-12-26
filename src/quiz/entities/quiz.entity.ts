@@ -1,5 +1,5 @@
 import { IsNumber, IsString } from 'class-validator';
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
 import { Painting } from '../../painting/entities/painting.entity';
 import { QUIZ_TIME_LIMIT } from '../const';
@@ -32,6 +32,16 @@ export class Quiz extends CustomBaseEntity {
   })
   @JoinTable()
   answer_paintings!: Painting[];
+
+  /*TODO
+    - 추가된 컬럼을 반영하여 CRUD 로직 수정하기
+  */
+  @ManyToOne(() => Painting, {
+    cascade: ['update', 'insert'],
+    eager: true,
+  })
+  @JoinTable()
+  example_painting!: Painting;
 
   @Column({
     default: 0,
