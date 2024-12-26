@@ -1,9 +1,12 @@
 import { IsNumber, IsString } from 'class-validator';
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Artist } from '../../artist/entities/artist.entity';
 import { CustomBaseEntity } from '../../db/entity/custom.base.entity';
+import { Style } from '../../painting/child-module/style/entities/style.entity';
+import { Tag } from '../../painting/child-module/tag/entities/tag.entity';
 import { Painting } from '../../painting/entities/painting.entity';
 import { QUIZ_TIME_LIMIT } from '../const';
-import { QUIZ_TYPE, QuizCategory } from '../type';
+import { QUIZ_TYPE } from '../type';
 
 @Entity()
 export class Quiz extends CustomBaseEntity {
@@ -14,10 +17,6 @@ export class Quiz extends CustomBaseEntity {
   @Column()
   @IsString()
   title!: string;
-
-  @Column()
-  @IsString()
-  category!: QuizCategory;
 
   @ManyToMany(() => Painting, {
     cascade: ['update', 'insert'],
@@ -62,4 +61,22 @@ export class Quiz extends CustomBaseEntity {
 
   @Column()
   type!: QUIZ_TYPE;
+
+  @ManyToMany(() => Artist, {
+    cascade: ['update', 'insert'],
+  })
+  @JoinTable()
+  artists!: Artist[];
+
+  @ManyToMany(() => Tag, {
+    cascade: ['update', 'insert'],
+  })
+  @JoinTable()
+  tags!: Tag[];
+
+  @ManyToMany(() => Style, {
+    cascade: ['update', 'insert'],
+  })
+  @JoinTable()
+  styles!: Style[];
 }
