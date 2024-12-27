@@ -60,6 +60,10 @@ export class Quiz extends CustomBaseEntity {
   })
   time_limit!: number;
 
+  @Column({ type: 'text' })
+  @IsString()
+  description!: string;
+
   @Column()
   type!: QUIZ_TYPE;
 
