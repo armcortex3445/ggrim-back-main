@@ -38,9 +38,10 @@ export class Quiz extends CustomBaseEntity {
   @ManyToOne(() => Painting, {
     cascade: ['update', 'insert'],
     eager: true,
+    nullable: true,
   })
   @JoinTable()
-  example_painting!: Painting;
+  example_painting!: Painting | undefined;
 
   @Column({
     default: 0,
