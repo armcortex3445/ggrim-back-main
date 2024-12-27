@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { Artist } from '../artist/entities/artist.entity';
+import { Style } from '../painting/child-module/style/entities/style.entity';
+import { Tag } from '../painting/child-module/tag/entities/tag.entity';
 import { Painting } from '../painting/entities/painting.entity';
 import { PaintingService } from '../painting/painting.service';
 import { extractValuesFromArray, updateProperty } from '../utils/object';
@@ -14,7 +16,8 @@ import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizDTO } from './dto/quiz.dto';
 import { UpdateQuizDTO } from './dto/update-quiz.dto';
 import { Quiz } from './entities/quiz.entity';
-import { QUIZ_TYPE, QuizCategory } from './type';
+import { RelatedPaintingIds, RelatedPaintings } from './interface/related-paintings.interface';
+import { QuizCategory } from './type';
 
 @Injectable()
 export class QuizService extends TypeOrmCrudService<Quiz> {
@@ -213,46 +216,56 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
   }
 
   async createQuiz(dto: CreateQuizDTO) {
-    const ids: string[] = [...dto.answerPaintingIds, ...dto.distractorPaintingIds];
-    const paintings: Painting[] = await this.paintingService.getByIds(ids);
+    const { answerPaintings, distractorPaintings, examplePainting } =
+      await this.getRelatedPaintings({ ...dto });
 
-    const answerPaintings: Painting[] = paintings.filter((p) =>
-      dto.answerPaintingIds.includes(p.id),
-    );
-    const distractorPaintings: Painting[] = paintings.filter((p) =>
-      dto.distractorPaintingIds.includes(p.id),
-    );
+    const newQuiz = new Quiz();
+    newQuiz.answer_paintings = [...answerPaintings];
+    newQuiz.distractor_paintings = [...distractorPaintings];
+    newQuiz.type = dto.type;
+    newQuiz.time_limit = dto.timeLimit;
+    newQuiz.title = dto.title;
+    newQuiz.example_painting = examplePainting;
 
-    return this.insertQuiz(
-      answerPaintings,
-      distractorPaintings,
-      dto.category,
-      dto.type,
-      dto.time_limit,
-      dto.title,
-    );
+    return this.insertQuiz(newQuiz);
   }
 
-  private async insertQuiz(
-    answerPaintings: Painting[],
-    distractorPaintings: Painting[],
-    category: QuizCategory,
-    type: QUIZ_TYPE,
-    timeLimit: number,
-    title: string,
-  ) {
-    const newQuiz = new Quiz();
+  private async insertQuiz(quiz: Quiz) {
     /*TODO 
       - Quiz.type 에 알맞은 그림 개수 검증필요
     */
-    newQuiz.answer_paintings = [...answerPaintings];
-    newQuiz.distractor_paintings = [...distractorPaintings];
-    newQuiz.category = category;
-    newQuiz.type = type;
-    newQuiz.time_limit = timeLimit;
-    newQuiz.title = title;
 
-    return await this.repo.save(newQuiz);
+    const relationPaintings: Painting[] = [...quiz.answer_paintings, ...quiz.distractor_paintings];
+
+    if (isNotFalsy(quiz.example_painting)) {
+      relationPaintings.push(quiz.example_painting);
+    }
+
+    const tagMap: Map<string, Tag> = new Map();
+    const styleMap: Map<string, Style> = new Map();
+    const artistMap: Map<string, Artist> = new Map();
+
+    relationPaintings.forEach((painting) => {
+      painting.tags.forEach((tag) => {
+        if (!tagMap.has(tag.id)) {
+          tagMap.set(tag.id, tag);
+        }
+      });
+      painting.styles.forEach((style) => {
+        if (!styleMap.has(style.id)) {
+          styleMap.set(style.id, style);
+        }
+      });
+      if (!artistMap.has(painting.artist.id)) {
+        artistMap.set(painting.artist.id, painting.artist);
+      }
+    });
+
+    quiz.tags = [...tagMap.values()];
+    quiz.styles = [...styleMap.values()];
+    quiz.artists = [...artistMap.values()];
+
+    return await this.repo.save(quiz);
   }
 
   async updateQuiz(id: string, dto: UpdateQuizDTO) {
@@ -265,18 +278,62 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
       );
     }
 
-    updateProperty(quiz, 'category', dto.category);
-    updateProperty(quiz, 'time_limit', dto.time_limit);
+    updateProperty(quiz, 'time_limit', dto.timeLimit);
     updateProperty(quiz, 'title', dto.title);
 
-    if (dto.answerPaintingIds) {
-      quiz.answer_paintings = await this.paintingService.getByIds(dto.answerPaintingIds);
-    }
+    const { answerPaintings, distractorPaintings, examplePainting } =
+      await this.getRelatedPaintings({ ...dto });
+    quiz.answer_paintings = answerPaintings;
+    quiz.distractor_paintings = distractorPaintings;
+    quiz.example_painting = examplePainting;
 
-    if (dto.distractorPaintingIds) {
-      quiz.distractor_paintings = await this.paintingService.getByIds(dto.distractorPaintingIds);
-    }
+    return this.insertQuiz(quiz);
+  }
 
-    return this.repo.save(quiz);
+  async createPaintingMap(paintingIds: string[]): Promise<Map<string, Painting>> {
+    const resultMap: Map<string, Painting> = new Map();
+    const idSet: Set<string> = new Set(paintingIds);
+    const paintings: Painting[] = await this.paintingService.getByIds([...idSet.values()]);
+
+    paintings.forEach((painting) => {
+      if (!resultMap.has(painting.id)) {
+        resultMap.set(painting.id, painting);
+      }
+    });
+
+    return resultMap;
+  }
+
+  async getRelatedPaintings(relatedPaintingIds: RelatedPaintingIds): Promise<RelatedPaintings> {
+    const { answerPaintingIds, distractorPaintingIds, examplePaintingId } = relatedPaintingIds;
+    const ids: string[] = [...answerPaintingIds, ...distractorPaintingIds];
+    if (isNotFalsy(examplePaintingId)) {
+      ids.push(examplePaintingId);
+    }
+    const idToPaintingMap: Map<string, Painting> = await this.createPaintingMap(ids);
+
+    return {
+      answerPaintings: this.resolvePaintings(relatedPaintingIds.answerPaintingIds, idToPaintingMap),
+      distractorPaintings: this.resolvePaintings(
+        relatedPaintingIds.distractorPaintingIds,
+        idToPaintingMap,
+      ),
+      examplePainting: relatedPaintingIds.examplePaintingId
+        ? idToPaintingMap.get(relatedPaintingIds.examplePaintingId)
+        : undefined,
+    };
+  }
+  private resolvePaintings(ids: string[], paintingMap: Map<string, Painting>): Painting[] {
+    return ids.map((id) => {
+      const painting = paintingMap.get(id);
+      if (!painting) {
+        throw new ServiceException(
+          'ENTITY_NOT_FOUND',
+          'BAD_REQUEST',
+          `Painting not found with id: ${id}`,
+        );
+      }
+      return painting;
+    });
   }
 }
