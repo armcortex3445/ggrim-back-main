@@ -96,69 +96,6 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     return ret;
   }
 
-  async selectDistractorPaintings(
-    category: QuizCategory,
-    commonValue: any,
-    count: number,
-  ): Promise<Painting[]> {
-    let paintings: Painting[] = [];
-
-    if ((category = 'artist')) {
-      /*TODO
-      - 동명이인 작가는 어떻게 처리할 것인가? */
-      paintings = await this.paintingService.getPaintingsByArtist(commonValue);
-    }
-
-    const map = new Map<number, Painting>();
-    if (paintings.length > count) {
-      while (map.size != count) {
-        const idx = getRandomNumber(0, paintings.length - 1);
-        if (map.has(idx)) {
-          continue;
-        }
-        map.set(idx, paintings[idx]);
-      }
-      return [...map.values()];
-    }
-
-    if (paintings.length < count) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `Not enough Paintings.\n` +
-          `${JSON.stringify({ category, commonValue, count, paintings }, null, 2)}`,
-      );
-    }
-
-    return paintings;
-  }
-
-  async getAnswerPaintings(
-    category: QuizCategory,
-    answerCategoryValues: any[],
-    valueIdx: number,
-  ): Promise<Painting[]> {
-    let answerPaintings: Painting[] = [];
-
-    if (!(valueIdx > 0 && answerCategoryValues.length - 1 > valueIdx)) {
-      throw new ServiceException(
-        'SERVICE_RUN_ERROR',
-        'INTERNAL_SERVER_ERROR',
-        `valueIdx is out of range.\n` +
-          `${JSON.stringify({ category, length: answerCategoryValues.length - 1, valueIdx })}`,
-      );
-    }
-
-    const categoryValue = answerCategoryValues[valueIdx];
-
-    if (category === 'artist') {
-      const artist = categoryValue;
-      answerPaintings = await this.paintingService.getPaintingsByArtist(artist);
-    }
-
-    return answerPaintings;
-  }
-
   getAnswerCategoryValues(
     category: QuizCategory,
     distractorPaintings: Painting[],
@@ -230,6 +167,91 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     return this.insertQuiz(newQuiz);
   }
 
+  async updateQuiz(id: string, dto: UpdateQuizDTO) {
+    const quiz = await this.repo.findOneByOrFail({ id });
+    if (!isNotFalsy(quiz)) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `Not found quiz.\n` + `id : ${id}`,
+      );
+    }
+
+    updateProperty(quiz, 'time_limit', dto.timeLimit);
+    updateProperty(quiz, 'title', dto.title);
+
+    const { answerPaintings, distractorPaintings, examplePainting } =
+      await this.getRelatedPaintings({ ...dto });
+    quiz.answer_paintings = answerPaintings;
+    quiz.distractor_paintings = distractorPaintings;
+    quiz.example_painting = examplePainting;
+
+    return this.insertQuiz(quiz);
+  }
+
+  private async selectDistractorPaintings(
+    category: QuizCategory,
+    commonValue: any,
+    count: number,
+  ): Promise<Painting[]> {
+    let paintings: Painting[] = [];
+
+    if ((category = 'artist')) {
+      /*TODO
+      - 동명이인 작가는 어떻게 처리할 것인가? */
+      paintings = await this.paintingService.getPaintingsByArtist(commonValue);
+    }
+
+    const map = new Map<number, Painting>();
+    if (paintings.length > count) {
+      while (map.size != count) {
+        const idx = getRandomNumber(0, paintings.length - 1);
+        if (map.has(idx)) {
+          continue;
+        }
+        map.set(idx, paintings[idx]);
+      }
+      return [...map.values()];
+    }
+
+    if (paintings.length < count) {
+      throw new ServiceException(
+        'ENTITY_NOT_FOUND',
+        'BAD_REQUEST',
+        `Not enough Paintings.\n` +
+          `${JSON.stringify({ category, commonValue, count, paintings }, null, 2)}`,
+      );
+    }
+
+    return paintings;
+  }
+
+  private async getAnswerPaintings(
+    category: QuizCategory,
+    answerCategoryValues: any[],
+    valueIdx: number,
+  ): Promise<Painting[]> {
+    let answerPaintings: Painting[] = [];
+
+    if (!(valueIdx > 0 && answerCategoryValues.length - 1 > valueIdx)) {
+      throw new ServiceException(
+        'SERVICE_RUN_ERROR',
+        'INTERNAL_SERVER_ERROR',
+        `valueIdx is out of range.\n` +
+          `${JSON.stringify({ category, length: answerCategoryValues.length - 1, valueIdx })}`,
+      );
+    }
+
+    const categoryValue = answerCategoryValues[valueIdx];
+
+    if (category === 'artist') {
+      const artist = categoryValue;
+      answerPaintings = await this.paintingService.getPaintingsByArtist(artist);
+    }
+
+    return answerPaintings;
+  }
+
   private async insertQuiz(quiz: Quiz) {
     /*TODO 
       - Quiz.type 에 알맞은 그림 개수 검증필요
@@ -268,29 +290,7 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     return await this.repo.save(quiz);
   }
 
-  async updateQuiz(id: string, dto: UpdateQuizDTO) {
-    const quiz = await this.repo.findOneByOrFail({ id });
-    if (!isNotFalsy(quiz)) {
-      throw new ServiceException(
-        'ENTITY_NOT_FOUND',
-        'BAD_REQUEST',
-        `Not found quiz.\n` + `id : ${id}`,
-      );
-    }
-
-    updateProperty(quiz, 'time_limit', dto.timeLimit);
-    updateProperty(quiz, 'title', dto.title);
-
-    const { answerPaintings, distractorPaintings, examplePainting } =
-      await this.getRelatedPaintings({ ...dto });
-    quiz.answer_paintings = answerPaintings;
-    quiz.distractor_paintings = distractorPaintings;
-    quiz.example_painting = examplePainting;
-
-    return this.insertQuiz(quiz);
-  }
-
-  async createPaintingMap(paintingIds: string[]): Promise<Map<string, Painting>> {
+  private async createPaintingMap(paintingIds: string[]): Promise<Map<string, Painting>> {
     const resultMap: Map<string, Painting> = new Map();
     const idSet: Set<string> = new Set(paintingIds);
     const paintings: Painting[] = await this.paintingService.getByIds([...idSet.values()]);
@@ -304,7 +304,9 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     return resultMap;
   }
 
-  async getRelatedPaintings(relatedPaintingIds: RelatedPaintingIds): Promise<RelatedPaintings> {
+  private async getRelatedPaintings(
+    relatedPaintingIds: RelatedPaintingIds,
+  ): Promise<RelatedPaintings> {
     const { answerPaintingIds, distractorPaintingIds, examplePaintingId } = relatedPaintingIds;
     const ids: string[] = [...answerPaintingIds, ...distractorPaintingIds];
     if (isNotFalsy(examplePaintingId)) {
