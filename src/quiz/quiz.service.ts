@@ -1,5 +1,5 @@
 import { TypeOrmCrudService } from '@dataui/crud-typeorm';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
@@ -12,6 +12,7 @@ import { extractValuesFromArray, updateProperty } from '../utils/object';
 import { getRandomElement, getRandomNumber } from '../utils/random';
 import { isNotFalsy } from '../utils/validator';
 import { QUIZ_TYPE_CONFIG } from './const';
+import { SearchQuizDTO } from './dto/SearchQuiz.dto';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { QuizDTO } from './dto/quiz.dto';
 import { UpdateQuizDTO } from './dto/update-quiz.dto';
@@ -224,6 +225,83 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     }
 
     return paintings;
+  }
+
+  async searchQuiz(dto: SearchQuizDTO, page: number, paginationCount: number) {
+    /*TODO
+      각 JSON 값이 string[]인지 확인 필요.
+    */
+    const tags = JSON.parse(dto.tags) as string[];
+    const styles = JSON.parse(dto.styles) as string[];
+    const artists = JSON.parse(dto.artist) as string[];
+
+    const subQueryFilterByTags = await this.repo
+      .createQueryBuilder()
+      .subQuery()
+      .select('quiz_tags.quizId')
+      .from('quiz_tags_tag', 'quiz_tags') // Many-to-Many 연결 테이블
+      .innerJoin('tag', 'tag', 'tag.id = quiz_tags.tagId') // 연결 테이블과 Tag JOIN
+      .where('tag.name IN (:...tagNames)') // tagNames 필터링
+      .groupBy('quiz_tags.quizId')
+      .having('COUNT(DISTINCT tag.id) = :tagCount') // 정확한 태그 갯수 매칭
+      .getQuery();
+    const subQueryFilterByStyles = await this.repo
+      .createQueryBuilder()
+      .subQuery()
+      .select('quiz_styles.quizId')
+      .from('quiz_styles_style', 'quiz_styles') // Many-to-Many 연결 테이블
+      .innerJoin('style', 'style', 'style.id = quiz_styles.styleId') // 연결 테이블과 Tag JOIN
+      .where('style.name IN (:...styleNames)') // tagNames 필터링
+      .groupBy('quiz_styles.quizId')
+      .having('COUNT(DISTINCT style.id) = :styleCount') // 정확한 태그 갯수 매칭
+      .getQuery();
+
+    const subQueryFilterByArtists = await this.repo
+      .createQueryBuilder()
+      .subQuery()
+      .select('quiz_artists.quizId')
+      .from('quiz_artists_artist', 'quiz_artists') // Many-to-Many 연결 테이블
+      .innerJoin('artist', 'artist', 'artist.id = quiz_artists.artistId') // 연결 테이블과 Tag JOIN
+      .where('artist.name IN (:...artistNames)') // tagNames 필터링
+      .groupBy('quiz_artists.quizId')
+      .having('COUNT(DISTINCT artist.id) = :artistCount') // 정확한 태그 갯수 매칭
+      .getQuery();
+
+    const mainQuery = await this.repo
+      .createQueryBuilder('quiz')
+      .leftJoinAndSelect('quiz.tags', 'tag')
+      .leftJoinAndSelect('quiz.styles', 'style')
+      .leftJoinAndSelect('quiz.artists', 'artist');
+
+    if (tags.length > 0) {
+      mainQuery.andWhere(`quiz.id IN ${subQueryFilterByTags}`, {
+        tagNames: tags,
+        tagCount: tags.length,
+      });
+    }
+
+    if (styles.length > 0) {
+      mainQuery.andWhere(`quiz.id IN ${subQueryFilterByStyles}`, {
+        styleNames: styles,
+        styleCount: styles.length,
+      });
+    }
+
+    if (artists.length > 0) {
+      mainQuery.andWhere(`quiz.id IN ${subQueryFilterByArtists}`, {
+        artistNames: artists,
+        artistCount: artists.length,
+      });
+    }
+
+    Logger.debug(mainQuery.getSql());
+
+    const result = mainQuery
+      .skip(page * paginationCount)
+      .take(paginationCount)
+      .getMany();
+
+    return result;
   }
 
   private async getAnswerPaintings(
