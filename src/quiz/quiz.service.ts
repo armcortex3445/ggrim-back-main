@@ -164,6 +164,7 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
     newQuiz.time_limit = dto.timeLimit;
     newQuiz.title = dto.title;
     newQuiz.example_painting = examplePainting;
+    newQuiz.description = dto.description;
 
     return this.insertQuiz(newQuiz);
   }
@@ -180,6 +181,7 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
 
     updateProperty(quiz, 'time_limit', dto.timeLimit);
     updateProperty(quiz, 'title', dto.title);
+    updateProperty(quiz, 'description', dto.description);
 
     const { answerPaintings, distractorPaintings, examplePainting } =
       await this.getRelatedPaintings({ ...dto });

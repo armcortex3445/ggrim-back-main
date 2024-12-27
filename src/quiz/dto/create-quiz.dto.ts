@@ -39,4 +39,7 @@ export class CreateQuizDTO {
   @IsString()
   @IsInArray(TYPE_VALUES)
   type!: QUIZ_TYPE;
+
+  @IsString()
+  description!: string;
 }
