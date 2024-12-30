@@ -46,6 +46,18 @@ import { QuizCategory } from './type';
       answer_paintings: {
         eager: true,
       },
+      example_paintings: {
+        eager: true,
+      },
+      styles: {
+        eager: true,
+      },
+      artists: {
+        eager: true,
+      },
+      tags: {
+        eager: true,
+      },
     },
   },
 })
