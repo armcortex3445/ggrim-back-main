@@ -85,6 +85,9 @@ export class QuizController implements CrudController<Quiz> {
     return this.service.generateQuizByValue(dto.category, dto.keyword);
   }
 
+/*TODO
+    - DB transaction 로직 추가하기
+  */
   @Post()
   async create(@Body() dto: CreateQuizDTO) {
     return this.service.createQuiz(dto);
