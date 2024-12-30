@@ -269,11 +269,18 @@ export class QuizService extends TypeOrmCrudService<Quiz> {
       .having('COUNT(DISTINCT artist.id) = :artistCount') // 정확한 태그 갯수 매칭
       .getQuery();
 
+    /*TODO
+        - JOIN 횟수가 성능에 끼치는 영향 정도를 점검하기
+          => 영향이 크면, 최적화 진행하기
+      */
     const mainQuery = await this.repo
       .createQueryBuilder('quiz')
       .leftJoinAndSelect('quiz.tags', 'tag')
       .leftJoinAndSelect('quiz.styles', 'style')
-      .leftJoinAndSelect('quiz.artists', 'artist');
+      .leftJoinAndSelect('quiz.artists', 'artist')
+      .leftJoinAndSelect('quiz.answer_paintings', 'answer_paintings')
+      .leftJoinAndSelect('quiz.distractor_paintings', 'distractor_paintings')
+      .leftJoinAndSelect('quiz.example_painting', 'example_painting');
 
     if (tags.length > 0) {
       mainQuery.andWhere(`quiz.id IN ${subQueryFilterByTags}`, {
