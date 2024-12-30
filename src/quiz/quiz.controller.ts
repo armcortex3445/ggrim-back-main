@@ -95,7 +95,7 @@ export class QuizController implements CrudController<Quiz> {
     return this.service.updateQuiz(id, dto);
   }
 
-  @Get('search')
+  @Get('')
   async searchQuiz(
     @Query() dto: SearchQuizDTO,
     @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
