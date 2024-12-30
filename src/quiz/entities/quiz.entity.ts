@@ -8,6 +8,12 @@ import { Painting } from '../../painting/entities/painting.entity';
 import { QUIZ_TIME_LIMIT } from '../const';
 import { QUIZ_TYPE } from '../type';
 
+/*TODO
+- 문제 풀이 로직 통계 정보 열 추가하기
+  - 시간 초과 횟수
+  - 문제 안푼 횟수 ....
+  => 필요한 열을 점검 및 추가하기
+*/
 @Entity()
 export class Quiz extends CustomBaseEntity {
   @PrimaryGeneratedColumn('uuid')
