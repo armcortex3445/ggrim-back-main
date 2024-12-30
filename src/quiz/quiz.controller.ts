@@ -61,7 +61,7 @@ import { QuizCategory } from './type';
     },
   },
 })
-@UsePipes(ValidationPipe)
+@UsePipes(new ValidationPipe({ transform: true }))
 @Controller('quiz')
 export class QuizController implements CrudController<Quiz> {
   constructor(public service: QuizService) {}
