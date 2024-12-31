@@ -2,8 +2,10 @@ import { Crud, CrudController } from '@dataui/crud';
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -12,7 +14,9 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { IPaginationResult } from '../_common/interface';
 import { CATEGORY_VALUES } from './const';
+import { SearchQuizDTO } from './dto/SearchQuiz.dto';
 import { CreateQuizDTO } from './dto/create-quiz.dto';
 import { GenerateQuizQueryDTO } from './dto/generate-quiz.query.dto';
 import { UpdateQuizDTO } from './dto/update-quiz.dto';
@@ -42,10 +46,22 @@ import { QuizCategory } from './type';
       answer_paintings: {
         eager: true,
       },
+      example_paintings: {
+        eager: true,
+      },
+      styles: {
+        eager: true,
+      },
+      artists: {
+        eager: true,
+      },
+      tags: {
+        eager: true,
+      },
     },
   },
 })
-@UsePipes(ValidationPipe)
+@UsePipes(new ValidationPipe({ transform: true }))
 @Controller('quiz')
 export class QuizController implements CrudController<Quiz> {
   constructor(public service: QuizService) {}
@@ -69,6 +85,9 @@ export class QuizController implements CrudController<Quiz> {
     return this.service.generateQuizByValue(dto.category, dto.keyword);
   }
 
+  /*TODO
+    - DB transaction 로직 추가하기
+  */
   @Post()
   async create(@Body() dto: CreateQuizDTO) {
     return this.service.createQuiz(dto);
@@ -79,13 +98,21 @@ export class QuizController implements CrudController<Quiz> {
     return this.service.updateQuiz(id, dto);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDTO) {
-  //   return this.service.update(+id, updateQuizDto);
-  // }
+  @Get('')
+  async searchQuiz(
+    @Query() dto: SearchQuizDTO,
+    @Query('page', new DefaultValuePipe(0), ParseIntPipe) page: number,
+  ) {
+    const paginationCount = 20;
+    const data: Quiz[] = await this.service.searchQuiz(dto, page, paginationCount);
 
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.service.remove(+id);
-  // }
+    const ret: IPaginationResult<Quiz> = {
+      data,
+      isMore: data.length === paginationCount,
+      count: data.length,
+      pagination: page,
+    };
+
+    return ret;
+  }
 }

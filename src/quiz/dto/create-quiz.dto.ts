@@ -1,9 +1,13 @@
-import { ArrayNotEmpty, IsArray, IsNumber, IsString, IsUUID } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { IsInArray } from '../../utils/class-validator';
-import { CATEGORY_VALUES, TYPE_VALUES } from '../const';
-import { QUIZ_TYPE, QuizCategory } from '../type';
+import { TYPE_VALUES } from '../const';
+import { QUIZ_TYPE } from '../type';
 
 export class CreateQuizDTO {
+  /*TODO
+    - answerPainting 과 distractor painting 크기 제한하기
+    - 퀴즈 타입 사양에 맞추기
+  */
   @IsArray()
   @ArrayNotEmpty()
   @IsUUID(undefined, {
@@ -18,17 +22,24 @@ export class CreateQuizDTO {
   })
   distractorPaintingIds!: string[];
 
+  @IsOptional()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID(undefined, {
+    each: true,
+  })
+  examplePaintingId!: string;
+
   @IsString()
   title!: string;
 
   @IsNumber()
-  time_limit!: number;
-
-  @IsString()
-  @IsInArray(CATEGORY_VALUES)
-  category!: QuizCategory;
+  timeLimit!: number;
 
   @IsString()
   @IsInArray(TYPE_VALUES)
   type!: QUIZ_TYPE;
+
+  @IsString()
+  description!: string;
 }
