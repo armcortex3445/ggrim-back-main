@@ -1,0 +1,13 @@
+node_modules
+logs
+.git
+.husky
+.vscode
+db_backup
+*.md
+ormlogs*
+
+.sample.env
+.env*
+!.env.production
+!/dist
