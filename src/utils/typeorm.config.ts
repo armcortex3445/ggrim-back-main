@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
+import { existsSync, mkdirSync } from 'fs';
+import { dirname, join } from 'path';
+import { FileLogger } from 'typeorm';
 import {
   ENV_DB_DATABASE_KEY,
   ENV_DB_HOST_KEY,
@@ -7,10 +10,16 @@ import {
   ENV_DB_PORT_KEY,
   ENV_DB_USER_NAME_KEY,
 } from '../_common/const/env-keys.const';
-
 @Injectable()
 export class TypeORMConfig implements TypeOrmOptionsFactory {
+  logPath: string = join('logs', 'db', 'ormlogs.log');
   createTypeOrmOptions(): TypeOrmModuleOptions {
+    const host: string = process.env[ENV_DB_HOST_KEY] || '';
+    const port: number = +(process.env[ENV_DB_PORT_KEY] || '');
+    this.ensureLogDirectoryExistence();
+    Logger.log(
+      `[TypeORMConfig] DB config. host : ${host}, port : ${port}, logPath : ${this.logPath}`,
+    );
     return {
       type: 'postgres',
       url: '',
@@ -22,13 +31,22 @@ export class TypeORMConfig implements TypeOrmOptionsFactory {
       autoLoadEntities: true,
       synchronize: false, //!process.env[NODE_ENV] ? false : true,
       keepConnectionAlive: true,
-      logging: ['error', 'log'],
-      logger: 'file',
+      logging: ['error', 'warn', 'log', 'query'],
+      logger: new FileLogger(['error', 'warn', 'log', 'query'], {
+        logPath: this.logPath,
+      }),
       maxQueryExecutionTime: 1000,
       entities: [__dirname + 'src/**/{entity,entities}/*.entity.{ts,js}'], //엔티티 클래스 경로
       extra: {
         max: 100,
       },
     } as TypeOrmModuleOptions;
+  }
+
+  ensureLogDirectoryExistence() {
+    const dir = dirname(this.logPath);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
   }
 }
