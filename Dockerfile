@@ -12,10 +12,10 @@ ENV BUILD_DIR="/build-back"
 WORKDIR ${BUILD_DIR}
 
 COPY . ./
-RUN echo "build start: "  && pwd && ls -la
+#RUN echo "build start: "  && pwd && ls -la
 RUN npm ci && npm run build
 
-RUN echo "comlete build: "  && pwd && ls -la
+#RUN echo "comlete build: "  && pwd && ls -la
 # 이미지 크기를 줄이기 위해서 어떻게 해야하는가? 빌드->빌드 결과 복사-> 빌드 실행?
 
 
@@ -25,15 +25,20 @@ ENV WORK_DIR="/app" \
 
 WORKDIR /${WORK_DIR}
 COPY ./package.json package-lock.json .env.production run.sh .
+
+# Add entrypoint script and set permissions
 RUN chmod +x /app/run.sh
-RUN echo "Before create image : " && pwd && ls -la
+#RUN echo "Before create image : " && pwd && ls -la
 
-RUN npm ci
+RUN npm ci --omit=dev
 
+# Copy build artifacts from builder stage
 COPY --from=builder $BUILD_RESULT_PATH $WORK_DIR/dist
-RUN echo "complete create image : " && pwd && ls -la
 
 
+#RUN echo "complete create image : " && pwd && ls -la
+
+# Expose port
 EXPOSE 3000
 
 
