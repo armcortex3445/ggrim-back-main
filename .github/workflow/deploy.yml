@@ -1,0 +1,51 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - init_docker
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: andyjm7739/ggrim
+          stage: main
+          yaml: |
+            name: ggrim-back-main
+            app: node@22
+            options:
+              env:
+                - name: NODE_ENV
+                  value: production
+                - name: DB_HOST
+                  value: ${{ secrets.DB_HOST }}
+                - name: DB_PORT
+                  value: ${{ secrets.DB_PORT }}
+                - name: DB_USERNAME
+                  value: ${{ secrets.DB_USERNAME }}
+                - name: DB_PASSWORD
+                  value: ${{ secrets.DB_PASSWORD }}
+                - name: DB_DATABASE
+                  value: ${{ secrets.DB_DATABASE }}
+                - name: APP_NAME
+                  value: ${{ secrets.APP_NAME }}
+              ports: 3000
+              build: npm run build
+              start: npm run start
+              install: npm ci
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
+              preset: nest.js
