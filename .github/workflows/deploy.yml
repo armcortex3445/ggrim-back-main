@@ -7,9 +7,9 @@ on:
 
 env:
   IMAGE_NAME: backend
-  NAMESPACE_NAME : anydyjm7739
+  NAMESPACE_NAME : andyjm7739
   PROJECT_NAME : ggrim
-  SERVICE_NAME : ggrim-backend-main
+  SERVICE_NAME : ggrim-back-main
 
 jobs:
   build-and-push-image:
