@@ -1,51 +1,59 @@
-name: Deploy to cloudtype
+name: Create and publish a Docker image to Docker Hub, Deploy to Cloudtype
+
 on:
   push:
     branches:
-      - init_docker
+      - main
+
+env:
+  IMAGE_NAME: armcortex3445/ggrim-back-main
+  NAMESPACE_NAME : anydyjm7739
+  PROJECT_NAME : ggrim
+  SERVICE_NAME : ggrim-backend-main
+
 jobs:
-  deploy:
+  build-and-push-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Connect deploy key
-        uses: cloudtype-github-actions/connect@v1
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name : Create .env.production
+        runs : echo "${{secrets.ENV_PRODUCTION}}" > .env.production
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
         with:
-          token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          ghtoken: ${{ secrets.GHP_TOKEN }}
-      - name: Deploy
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Deploy to Cloudtype
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: andyjm7739/ggrim
+          project: ${{ NAMESPACE_NAME }}/${{ PROJECT_NAME }}
           stage: main
           yaml: |
-            name: ggrim-back-main
-            app: node@22
+            name: ${{SERVICE_NAME}}
+            app: container
             options:
-              env:
-                - name: NODE_ENV
-                  value: production
-                - name: DB_HOST
-                  value: ${{ secrets.DB_HOST }}
-                - name: DB_PORT
-                  value: ${{ secrets.DB_PORT }}
-                - name: DB_USERNAME
-                  value: ${{ secrets.DB_USERNAME }}
-                - name: DB_PASSWORD
-                  value: ${{ secrets.DB_PASSWORD }}
-                - name: DB_DATABASE
-                  value: ${{ secrets.DB_DATABASE }}
-                - name: APP_NAME
-                  value: ${{ secrets.APP_NAME }}
               ports: 3000
-              build: npm run build
-              start: npm run start
-              install: npm ci
-              buildenv: []
-            context:
-              git:
-                url: git@github.com:${{ github.repository }}.git
-                ref: ${{ github.ref }}
-              preset: nest.js
+              image: ${{ steps.meta.outputs.tags }}
