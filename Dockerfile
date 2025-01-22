@@ -20,23 +20,23 @@ RUN npm ci && npm run build
 
 
 FROM node:${NODE_VERSION}
-ENV WORK_DIR="/app" \
+ENV WORK_DIR="app" \
     BUILD_RESULT_PATH="/build-back/dist"
 
 WORKDIR /${WORK_DIR}
 COPY ./package.json package-lock.json .env.production run.sh .
 
 # Add entrypoint script and set permissions
-RUN chmod +x /app/run.sh
-#RUN echo "Before create image : " && pwd && ls -la
+RUN chmod +x run.sh
+RUN echo "Before create image : " && pwd && ls -la
 
 RUN npm ci --omit=dev
 
 # Copy build artifacts from builder stage
-COPY --from=builder $BUILD_RESULT_PATH $WORK_DIR/dist
+COPY --from=builder $BUILD_RESULT_PATH ./dist/
 
 
-#RUN echo "complete create image : " && pwd && ls -la
+RUN echo "complete create image : " && pwd && ls -la
 
 # Expose port
 EXPOSE 3000
