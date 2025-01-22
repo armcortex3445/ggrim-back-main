@@ -3,7 +3,7 @@ name: Create and publish a Docker image to Docker Hub, Deploy to Cloudtype
 on:
   push:
     branches:
-      - main
+      - init_docker
 
 env:
   IMAGE_NAME: armcortex3445/ggrim-back-main
