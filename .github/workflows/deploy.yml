@@ -49,10 +49,10 @@ jobs:
         uses: cloudtype-github-actions/deploy@v1
         with:
           token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: ${{ NAMESPACE_NAME }}/${{ PROJECT_NAME }}
+          project: ${{ env.NAMESPACE_NAME }}/${{ env.PROJECT_NAME }}
           stage: main
           yaml: |
-            name: ${{SERVICE_NAME}}
+            name: ${{env.SERVICE_NAME}}
             app: container
             options:
               ports: 3000
