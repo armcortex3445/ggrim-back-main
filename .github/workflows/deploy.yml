@@ -45,15 +45,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Deploy to Cloudtype
-        uses: cloudtype-github-actions/deploy@v1
-        with:
-          token: ${{ secrets.CLOUDTYPE_TOKEN }}
-          project: ${{ env.NAMESPACE_NAME }}/${{ env.PROJECT_NAME }}
-          stage: main
-          yaml: |
-            name: ${{env.SERVICE_NAME}}
-            app: container
-            options:
-              ports: 3000
-              image: ${{ steps.meta.outputs.tags }}
+      # - name: Deploy to Cloudtype
+      #   uses: cloudtype-github-actions/deploy@v1
+      #   with:
+      #     token: ${{ secrets.CLOUDTYPE_TOKEN }}
+      #     project: ${{ env.NAMESPACE_NAME }}/${{ env.PROJECT_NAME }}
+      #     stage: main
+      #     yaml: |
+      #       name: ${{env.SERVICE_NAME}}
+      #       app: container
+      #       options:
+      #         ports: 3000
+      #         image: ${{ steps.meta.outputs.tags }}
