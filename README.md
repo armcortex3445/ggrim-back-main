@@ -100,3 +100,32 @@ ref : https://awesome-nestjs.com/resources/boilerplate.html
     - detail
         - use other filter option 
             ref : https://gid-oss.github.io/dataui-nestjs-crud/controllers/#options 
+
+# Docker 
+
+## Build image 
+
+1. .env.production 파일 생성
+- .sample.env 참조
+
+2. .env.production.gpg 파일 생성
+- 다음 명령어를 실행후, 암호 입력
+```bash
+$ gpg -c .env.production
+```
+
+
+3. 환경 변수 설정 및 빌드 명령어 실행
+```bash
+$ export GPG_TOKEN='password_env.production'
+$ docker build --secret id=GPG_TOKEN,env=GPG_TOKEN --no-cache --progress=plain -t my-nestjs-app . &> build.log
+```
+
+
+## Run Container in local
+
+### Log Mount with volume 
+- 컨데이터 실행전, 옵션 설정에서 Volume path 설정
+    - source : mount할 host pc
+    - dest : /app/logs
+        - 해당 경로에 web log와 typeorm log 모두 존재

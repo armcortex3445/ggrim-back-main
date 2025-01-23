@@ -6,8 +6,11 @@ logs
 db_backup
 *.md
 ormlogs*
+docker
+.github
 
+*.csv
 .sample.env
 .env*
-!.env.production
+!.env.production.gpg
 !/dist
