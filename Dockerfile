@@ -8,6 +8,7 @@ LABEL mainainer="ggrim@back" \
 
 ENV BUILD_DIR="/build-back" 
 
+
 #Set working directory
 WORKDIR ${BUILD_DIR}
 
@@ -26,9 +27,9 @@ ENV WORK_DIR="app" \
 WORKDIR /${WORK_DIR}
 COPY package.json package-lock.json .env.production.gpg run.sh .
 
+ARG GPG_TOKEN="your_password"
 RUN apk add --no-cache gnupg
-RUN --mount=type=secret,id=GPG_TOKEN \
-    gpg --batch --verbose --yes --passphrase-file /run/secrets/GPG_TOKEN -d .env.production.gpg > .env.production
+RUN gpg --batch --verbose --yes --passphrase ${GPG_TOKEN} .env.production.gpg > .env.production
 
 # Add entrypoint script and set permissions
 RUN chmod +x run.sh
@@ -41,6 +42,9 @@ COPY --from=builder $BUILD_RESULT_PATH ./dist/
 
 
 RUN echo "complete create image : " && pwd && ls -la
+
+# node 이미지에 이미 "node"라는 사용자가 uid/gid 1000번으로 생성되어 있음
+USER node
 
 # Expose port
 EXPOSE 3000
