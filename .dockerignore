@@ -1,0 +1,16 @@
+node_modules
+logs
+.git
+.husky
+.vscode
+db_backup
+*.md
+ormlogs*
+docker
+.github
+
+*.csv
+.sample.env
+.env*
+!.env.production.gpg
+!/dist

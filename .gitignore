@@ -37,7 +37,9 @@ lerna-debug.log*
 
 # dotenv environment variable files
 .env
+!.env.*
 .env.*
+!.env.production.gpg
 
 # temp directory
 .temp
@@ -51,3 +53,4 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+*.csv

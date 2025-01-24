@@ -3,3 +3,9 @@
 .prettierignore
 .prettierrc
 **/*.md
+Dockerfile
+.dockerignore
+*.sh
+*.yml
+*.gpg
+.gitignore
