@@ -117,8 +117,7 @@ $ gpg -c .env.production
 
 3. 환경 변수 설정 및 빌드 명령어 실행
 ```bash
-$ export GPG_TOKEN='password_env.production'
-$ docker build --secret id=GPG_TOKEN,env=GPG_TOKEN --no-cache --progress=plain -t my-nestjs-app . &> build.log
+$ docker build --build-arg GPG_TOKEN='your_gpg_password' --no-cache --progress=plain -t my-nestjs-app . &> build.log
 ```
 
 
