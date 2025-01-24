@@ -43,6 +43,9 @@ COPY --from=builder $BUILD_RESULT_PATH ./dist/
 
 RUN echo "complete create image : " && pwd && ls -la
 
+# /app 디렉토리 전체에 권한 부여
+RUN chown -R node:node /app
+
 # node 이미지에 이미 "node"라는 사용자가 uid/gid 1000번으로 생성되어 있음
 USER node
 
