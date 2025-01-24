@@ -19,9 +19,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      
-      - name : Create .env.production
-        run : echo "${{secrets.ENV_PRODUCTION}}" > .env.production
 
       - name: Log in to the Container registry
         uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1
@@ -42,6 +39,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args : |
+            GPG_TOKEN=${{ secrets.ENV_PRODUCTION_GPG }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
