@@ -1,19 +1,17 @@
 import { utilities as nestWinstonModuleUtilities, WinstonModule } from 'nest-winston';
-import * as winstonDaily from 'winston-daily-rotate-file';
 import * as winston from 'winston';
-import { basename } from 'path';
+import * as winstonDaily from 'winston-daily-rotate-file';
 import { APP_NAME_KEY, NODE_ENV } from '../_common/const/env-keys.const';
 
 //ref : https://pypystory.tistory.com/80
 
-const isProduction = !process.env[NODE_ENV];
-const logDir = `${process.cwd()}/logs`;
+const isProduction = process.env[NODE_ENV] !== 'production';
 
 const dailyOptions = (level: string) => {
   return {
     level,
-    datePattern: 'YYYY-MM-DD-HH',
-    dirname: logDir + `/${level}`,
+    datePattern: 'YYYY-MM-DD',
+    dirname: `logs/app`,
     filename: `%DATE%.${level}.log`,
     zippedArchive: true,
     maxSize: '20m',
@@ -62,7 +60,7 @@ export const winstonLogger = WinstonModule.createLogger({
     }),
 
     new winstonDaily(dailyOptions('info')),
-    new winstonDaily(dailyOptions('warn')),
-    new winstonDaily(dailyOptions('error')),
+    // new winstonDaily(dailyOptions('warn')),
+    // new winstonDaily(dailyOptions('error')),
   ],
 });

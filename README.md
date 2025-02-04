@@ -128,3 +128,26 @@ $ docker build --build-arg GPG_TOKEN='your_gpg_password' --no-cache --progress=p
     - source : mount할 host pc
     - dest : /app/logs
         - 해당 경로에 web log와 typeorm log 모두 존재
+
+
+
+# 배포 환경
+## 로그파일 AWS S3 업로드
+### 자격 증명 획득
+- 단기 자격 증명으로 인증
+    - 참조 : https://docs.aws.amazon.com/ko_kr/cli/latest/userguide/cli-authentication-short-term.html
+- aws sso 활용
+
+    - 다음 명령어를 입력하여 sso 진행
+```bash
+aws configure sso --use-device-code
+```
+
+    - 참조 : https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
+
+### aws cli 사용
+2. aws cli 활용
+- 단기 자격 증명에서 인증한 profile_name을 사용하여 명령어 사용
+```bash
+aws s3 cp {your_local_file} s3://{your-buckets} --profile {your_profile_name}
+```
