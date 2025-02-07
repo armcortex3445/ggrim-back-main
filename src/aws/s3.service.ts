@@ -35,7 +35,7 @@ export class S3Service {
     return Body?.transformToString();
   }
 
-  async downloadFile(bucketName : string, key : string, destinationPath  : string) : Promise<string|null> {
+  async downloadFile(bucketName : string, key : string, destinationPath  : string) : Promise<string> {
       const pipelineAsync = promisify(pipeline);
       const command = new GetObjectCommand({
         Bucket: bucketName,
