@@ -4,4 +4,4 @@ export const TYPE_DEFAULT_VALUE = {
   number: -1,
 };
 
-export const configFilePath = './app-config/';
+export const CONFIG_FILE_PATH = './app-config/';

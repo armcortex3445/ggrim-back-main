@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { existsSync } from 'fs';
 import { QueryRunner } from 'typeorm';
-import { configFilePath } from '../_common/const/default.value';
+import { CONFIG_FILE_PATH } from '../_common/const/default.value';
 import { AWS_BUCKET, AWS_INIT_FILE_KEY_PREFIX } from '../_common/const/env-keys.const';
 import { ServiceException } from '../_common/filter/exception/service/service-exception';
 import { S3Service } from '../aws/s3.service';
@@ -122,7 +122,7 @@ export class PaintingController {
   @Get('art_of_week')
   async getWeeklyArtData() {
     const latestMonday: string = getLatestMonday();
-    const path = configFilePath;
+    const path = CONFIG_FILE_PATH;
     let artworkFileName: string = `artwork_of_week_${latestMonday}.json`;
     if (!existsSync(path + artworkFileName)) {
       Logger.error(`there is no file : ${path + artworkFileName}`);
@@ -143,7 +143,7 @@ export class PaintingController {
       await this.s3Service.downloadFile(
         bucketName,
         prefixKey + artworkFileName,
-        configFilePath + artworkFileName,
+        CONFIG_FILE_PATH + artworkFileName,
       );
 
       return 'success init';
