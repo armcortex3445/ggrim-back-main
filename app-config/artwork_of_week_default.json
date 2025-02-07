@@ -1,0 +1,133 @@
+{
+  "dataName": "artwork of week",
+  "data": [
+    {
+      "id": "Boy in a Red Vest",
+      "type": "NOTHING",
+      "cldId": "0",
+      "operatorDescription": "Oil painting (Venturi 681) painted 1888-1890. It is an excellent example of Cézanne's skilled, detailed and innovative mature work from 1880 onwards.Cézanne painted four oil portraits of this Italian boy in a red vest (waistcoat in British English), all in different poses, which allowed him to study the relationship between the figure and space. The most famous of the four, and the work commonly referred to by this title, depicts a boy in a brooding seated pose with his elbows resting on a table and his head in his hands. This work is currently housed in Zurich, Switzerland. Three other portraits in different poses are held in museums in the United States.",
+      "painting": {
+        "version": 0,
+        "id": "",
+        "title": "Boy in a Red Vest",
+        "image_url": "https://uploads6.wikiart.org/images/paul-cezanne/boy-in-a-red-vest-1889.jpg!Large.jpg",
+        "description": "",
+        "completition_year": 0,
+        "width": 0,
+        "height": 0,
+        "tags": [],
+        "styles": [],
+        "artist": {
+          "version": 0,
+          "id": "",
+          "name": "Paul Cezanne",
+          "image_url": "",
+          "birth_date": "",
+          "death_date": "",
+          "info_url": ""
+        }
+      },
+      "aspectRatio": [
+        "",
+        0,
+        0
+      ]
+    },
+    {
+      "id": "Head of an Old Man",
+      "type": "NOTHING",
+      "cldId": "0",
+      "operatorDescription": "Around 1860, Paul Cézanne (1939-1906) submitted his works to the Salon Exhibition (Le Salon: a juried exhibition of conservative art circles that served as a gateway for young artists in the late 19th century), but was repeatedly rejected. In addition, he had to endure criticism and criticism from critics and the public who did not understand Cézanne's original techniques at the time. Cézanne's friend wrote in a letter to Émile Zola (1840-1902), `Cézanne's paintings have been on display for a long time. 'If it had happened, people would have broken the windows and destroyed the canvas, he recalled. Cézanne, who was sensitive and lacked patience, experienced deep skepticism and frustration, but fortunately, colleagues such as Émile Zola and Camille Pissarro (1830-1903) provided him with comfort.",
+      "painting": {
+        "version": 0,
+        "id": "",
+        "title": "Head of an Old Man",
+        "image_url": "https://uploads2.wikiart.org/images/paul-cezanne/head-of-an-old-man.jpg!Large.jpg",
+        "description": "",
+        "completition_year": 0,
+        "width": 0,
+        "height": 0,
+        "tags": [],
+        "styles": [],
+        "artist": {
+          "version": 0,
+          "id": "",
+          "name": "Paul Cezanne",
+          "image_url": "",
+          "birth_date": "",
+          "death_date": "",
+          "info_url": ""
+        }
+      },
+      "aspectRatio": [
+        "",
+        0,
+        0
+      ]
+    },
+    {
+      "id": "Mont Sainte-Victoire",
+      "type": "NOTHING",
+      "cldId": "0",
+      "operatorDescription": "Cézanne bought an acre of land on this hill in 1901, and built a studio on it late the following year. For the remainder of his career he returned to the motif of Mont Sainte-Victoire, resulting in an incredibly diverse series of works. They show the mountains from different perspectives, often in relation to other constantly changing elements (trees and bushes in the foreground, buildings and bridges, fields and quarries). From this series we can extract more than 20 paintings and a subgroup of watercolors.",
+      "painting": {
+        "version": 0,
+        "id": "",
+        "title": "Mont Sainte-Victoire",
+        "image_url": "https://uploads0.wikiart.org/images/paul-cezanne/mont-sainte-victoire-1887.jpg!Large.jpg",
+        "description": "",
+        "completition_year": 0,
+        "width": 0,
+        "height": 0,
+        "tags": [],
+        "styles": [],
+        "artist": {
+          "version": 0,
+          "id": "",
+          "name": "Poul Cezanne",
+          "image_url": "",
+          "birth_date": "",
+          "death_date": "",
+          "info_url": ""
+        }
+      },
+      "aspectRatio": [
+        "",
+        0,
+        0
+      ]
+    },
+    {
+      "id": "Still Life Apples and Pears",
+      "type": "NOTHING",
+      "cldId": "0",
+      "operatorDescription": "Cezanne once declared that he wanted to 'astonish Paris with apples,' and he succeeded in dazzling and delighting even in deceptively simple still lifes. Looking at the Provençal apples and Beurré Diel pears grown near his family's estate near Aix, he abandoned the traditional one-point perspective and examined the fruit, plates, and tables from multiple perspectives: vertical, top, and side.",
+      "painting": {
+        "version": 0,
+        "id": "",
+        "title": "Still Life Apples and Pears",
+        "image_url": "https://uploads7.wikiart.org/images/paul-cezanne/still-life-apples-and-pears-1887.jpg!Large.jpg",
+        "description": "",
+        "completition_year": 0,
+        "width": 0,
+        "height": 0,
+        "tags": [],
+        "styles": [],
+        "artist": {
+          "version": 0,
+          "id": "",
+          "name": "Paul Cezanne",
+          "image_url": "",
+          "birth_date": "",
+          "death_date": "",
+          "info_url": ""
+        }
+      },
+      "aspectRatio": [
+        "",
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -3,3 +3,5 @@ export const TYPE_DEFAULT_VALUE = {
   array: [],
   number: -1,
 };
+
+export const configFilePath = './app-config/';
