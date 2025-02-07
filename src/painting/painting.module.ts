@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ArtistModule } from '../artist/artist.module';
+import { S3Module } from '../aws/s3.module';
 import { Style } from './child-module/style/entities/style.entity';
 import { StyleModule } from './child-module/style/style.module';
 import { StyleService } from './child-module/style/style.service';
@@ -17,6 +18,7 @@ import { WikiArtPaintingService } from './sub-service/wikiArt.painting.service';
     ArtistModule,
     TagModule,
     StyleModule,
+    S3Module,
   ],
   controllers: [PaintingController],
   providers: [PaintingService, WikiArtPaintingService, StyleService],

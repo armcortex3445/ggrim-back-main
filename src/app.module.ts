@@ -9,6 +9,7 @@ import { NODE_ENV } from './_common/const/env-keys.const';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ArtistModule } from './artist/artist.module';
+import { S3Module } from './aws/s3.module';
 import { PaintingModule } from './painting/painting.module';
 import { QuizModule } from './quiz/quiz.module';
 import { TypeORMConfig } from './utils/typeorm.config';
@@ -35,6 +36,7 @@ const ENV = process.env[NODE_ENV];
     PaintingModule,
     ArtistModule,
     QuizModule,
+    S3Module,
   ],
   controllers: [AppController],
   providers: [AppService],

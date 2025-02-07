@@ -11,3 +11,9 @@ export const APP_NAME_KEY = 'APP_NAME';
 //related to app run config
 
 export const NODE_ENV = 'NODE_ENV';
+
+//related to aws 
+export const AWS_ACCESS_KEY = 'AWS_ACCESS_KEY';
+export const AWS_ACCESS_SECRET_KEY = 'AWS_ACCESS_SECRET_KEY'
+export const AWS_BUCKET = 'AWS_BUCKET';
+export const AWS_REGION = 'AWS_REGION'
