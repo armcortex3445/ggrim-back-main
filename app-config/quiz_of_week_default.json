@@ -1,0 +1,300 @@
+{
+  "dataName": "quiz of week",
+  "data": [
+    {
+      "distractorPaintings": [
+        {
+          "created_date": "2024-12-24T08:32:16.575Z",
+          "updated_date": "2024-12-24T08:32:16.575Z",
+          "deleted_date": null,
+          "version": 2,
+          "id": "9614e2ee-a347-46dc-8715-d4603fedba39",
+          "title": "Leda and the Swan",
+          "image_url": "https://uploads1.wikiart.org/images/paul-cezanne/leda-and-the-swan.jpg!Large.jpg",
+          "description": "",
+          "completition_year": 1882,
+          "width": 750,
+          "height": 592,
+          "artist": {
+            "created_date": "2024-11-27T11:59:59.677Z",
+            "updated_date": "2024-11-27T11:59:59.677Z",
+            "deleted_date": null,
+            "version": null,
+            "id": "0123dd07-a275-441d-bed3-7cead2928ef0",
+            "name": "Cezanne Paul",
+            "image_url": null,
+            "birth_date": null,
+            "death_date": null,
+            "info_url": null
+          },
+          "tags": [
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "31e3c392-78fa-4aad-a893-f2d9e4a25ea3",
+              "name": "Mythology",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "40d299c8-55df-4254-9422-df5387bf3b10",
+              "name": "Leda",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "5436c2b5-9bf8-4835-bb72-a5afdf333f56",
+              "name": "Jupiter/Zeus",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "ba73c494-1b74-4589-94ab-fc5f446fef35",
+              "name": "Leda-and-the-Swan",
+              "info_url": null
+            }
+          ],
+          "styles": [
+            {
+              "created_date": "2024-11-27T11:23:33.102Z",
+              "updated_date": "2024-11-27T11:23:33.102Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "603ae022-e331-4c23-bab6-1ae7eaa7a4a4",
+              "name": "Post-Impressionism",
+              "info_url": null
+            }
+          ]
+        },
+        {
+          "created_date": "2024-12-24T08:32:38.648Z",
+          "updated_date": "2024-12-24T08:32:38.648Z",
+          "deleted_date": null,
+          "version": 2,
+          "id": "98d9fc14-88a0-433b-bae1-778f1f101913",
+          "title": "Still life with Apples",
+          "image_url": "https://uploads8.wikiart.org/images/paul-cezanne/still-life-with-apples-1.jpg!Large.jpg",
+          "description": "",
+          "completition_year": 1890,
+          "width": 750,
+          "height": 563,
+          "artist": {
+            "created_date": "2024-11-27T11:59:59.677Z",
+            "updated_date": "2024-11-27T11:59:59.677Z",
+            "deleted_date": null,
+            "version": null,
+            "id": "0123dd07-a275-441d-bed3-7cead2928ef0",
+            "name": "Cezanne Paul",
+            "image_url": null,
+            "birth_date": null,
+            "death_date": null,
+            "info_url": null
+          },
+          "tags": [
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "166c5c09-8e8c-4733-9fc3-d54308931dd4",
+              "name": "Fruit",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-12-24T08:32:38.393Z",
+              "updated_date": "2024-12-24T08:32:38.393Z",
+              "deleted_date": null,
+              "version": 1,
+              "id": "4ee91ce7-33e1-4130-91ab-ecbe10a88743",
+              "name": "Mcintosh",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "d80261ff-2553-40f8-80da-9156233b890c",
+              "name": "Still life photography",
+              "info_url": null
+            }
+          ],
+          "styles": [
+            {
+              "created_date": "2024-11-27T11:23:33.102Z",
+              "updated_date": "2024-11-27T11:23:33.102Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "603ae022-e331-4c23-bab6-1ae7eaa7a4a4",
+              "name": "Post-Impressionism",
+              "info_url": null
+            }
+          ]
+        },
+        {
+          "created_date": "2024-12-24T08:31:41.393Z",
+          "updated_date": "2024-12-24T08:31:41.393Z",
+          "deleted_date": null,
+          "version": 2,
+          "id": "5b8ba031-d8a0-41d9-a1bd-6b9b9356df30",
+          "title": "Portrait of Emile Zola",
+          "image_url": "https://uploads2.wikiart.org/images/paul-cezanne/portrait-of-emile-zola-1864.jpg!Large.jpg",
+          "description": "",
+          "completition_year": 1864,
+          "width": 476,
+          "height": 600,
+          "artist": {
+            "created_date": "2024-11-27T11:59:59.677Z",
+            "updated_date": "2024-11-27T11:59:59.677Z",
+            "deleted_date": null,
+            "version": null,
+            "id": "0123dd07-a275-441d-bed3-7cead2928ef0",
+            "name": "Cezanne Paul",
+            "image_url": null,
+            "birth_date": null,
+            "death_date": null,
+            "info_url": null
+          },
+          "tags": [
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "1b8fed0c-dfec-410a-81a3-11e567ee3ddf",
+              "name": "Cheek",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "547919df-e2af-4667-b3dd-9205ee721bdb",
+              "name": "Nose",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "74a4a93f-b8fe-4027-8494-14a9b1fe852b",
+              "name": "Chin",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "7e6e0c0b-9108-45f2-a8f0-85e8ce6ab662",
+              "name": "Forehead",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "d2999bad-f838-4b29-b4f8-724983781533",
+              "name": "Gentleman",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "f6056806-709a-4e56-8483-cad5b5e3dd84",
+              "name": "Facial hair",
+              "info_url": null
+            }
+          ],
+          "styles": [
+            {
+              "created_date": "2024-11-27T11:23:33.102Z",
+              "updated_date": "2024-11-27T11:23:33.102Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "6347041e-68fa-490a-aea9-eef5bc9e8003",
+              "name": "Romanticism",
+              "info_url": null
+            }
+          ]
+        }
+      ],
+      "answerPaintings": [
+        {
+          "created_date": "2024-12-24T08:31:31.827Z",
+          "updated_date": "2024-12-24T08:31:31.827Z",
+          "deleted_date": null,
+          "version": 2,
+          "id": "69ee8c31-6e86-4038-98a8-7ed41fecfcf6",
+          "title": "Jane Avril",
+          "image_url": "https://uploads2.wikiart.org/images/henri-de-toulouse-lautrec/jane-avril-1892.jpg",
+          "description": "",
+          "completition_year": 1892,
+          "width": 300,
+          "height": 453,
+          "artist": {
+            "created_date": "2024-11-27T11:59:59.677Z",
+            "updated_date": "2024-11-27T11:59:59.677Z",
+            "deleted_date": null,
+            "version": null,
+            "id": "374efc90-54c8-448e-a74f-172aa0c25bf0",
+            "name": "Toulouse-Lautrec Henri de",
+            "image_url": null,
+            "birth_date": null,
+            "death_date": null,
+            "info_url": null
+          },
+          "tags": [
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "6f089f82-07e1-4ff9-b800-a71171bd1856",
+              "name": "Lady",
+              "info_url": null
+            },
+            {
+              "created_date": "2024-11-27T08:32:27.440Z",
+              "updated_date": "2024-11-27T08:32:27.440Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "976142b0-f6b6-4cd8-89df-19b69ad0df64",
+              "name": "female-portraits",
+              "info_url": null
+            }
+          ],
+          "styles": [
+            {
+              "created_date": "2024-11-27T11:23:33.102Z",
+              "updated_date": "2024-11-27T11:23:33.102Z",
+              "deleted_date": null,
+              "version": null,
+              "id": "603ae022-e331-4c23-bab6-1ae7eaa7a4a4",
+              "name": "Post-Impressionism",
+              "info_url": null
+            }
+          ]
+        }
+      ],
+      "category": "artist",
+      "similarity": "Cezanne Paul"
+    }
+  ]
+}
