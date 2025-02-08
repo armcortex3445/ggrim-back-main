@@ -146,6 +146,13 @@ aws configure sso --use-device-code
     - 참조 : https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html
 
 ### aws cli 사용
+1. aws cli 설치
+```bash
+apk update && apk add --no-cache aws-cli
+
+#AWS CLI 버전 확인
+aws --version
+```
 2. aws cli 활용
 - 단기 자격 증명에서 인증한 profile_name을 사용하여 명령어 사용
 ```bash
