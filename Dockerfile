@@ -26,6 +26,8 @@ ARG WORK_DIR="app" \
 
 WORKDIR /${WORK_DIR}
 COPY package.json package-lock.json .env.production.gpg *.sh .
+RUN mkdir app-config
+COPY app-config/ ./app-config/
 
 ARG GPG_TOKEN="your_password"
 RUN apk add --no-cache gnupg

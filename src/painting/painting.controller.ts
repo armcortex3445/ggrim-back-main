@@ -16,11 +16,19 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { existsSync } from 'fs';
 import { QueryRunner } from 'typeorm';
+import { CONFIG_FILE_PATH } from '../_common/const/default.value';
+import { AWS_BUCKET, AWS_INIT_FILE_KEY_PREFIX } from '../_common/const/env-keys.const';
+import { ServiceException } from '../_common/filter/exception/service/service-exception';
+import { S3Service } from '../aws/s3.service';
 import { DBQueryRunner } from '../db/query-runner/decorator/query-runner.decorator';
 import { QueryRunnerInterceptor } from '../db/query-runner/query-runner.interceptor';
+import { getLatestMonday } from '../utils/date';
+import { loadObjectFromJSON } from '../utils/json';
 import { CreatePaintingDTO } from './dto/create-painting.dto';
 import { FindPaintingQueryDTO } from './dto/find-painting.query.dto';
+import { WeeklyArtWorkSet } from './dto/output/weekly-art.dto';
 import { ReplacePaintingDTO } from './dto/replace-painting.dto';
 import { SearchPaintingDTO } from './dto/search-painting.dto';
 import { Painting } from './entities/painting.entity';
@@ -30,7 +38,10 @@ import { IPaginationResult } from './responseDTO';
 @UsePipes(new ValidationPipe({ transform: true }))
 @Controller('painting')
 export class PaintingController {
-  constructor(@Inject(PaintingService) private readonly service: PaintingService) {}
+  constructor(
+    @Inject(PaintingService) private readonly service: PaintingService,
+    @Inject(S3Service) private readonly s3Service: S3Service,
+  ) {}
 
   @Get('/')
   async searchPainting(
@@ -103,5 +114,48 @@ export class PaintingController {
   ) {
     const targetPainting = await this.service.findPaintingOrThrow(id);
     return this.service.deleteOne(queryRunner, targetPainting);
+  }
+  /*TODO 
+  -
+  */
+
+  @Get('artwork_of_week')
+  async getWeeklyArtworkData() {
+    const latestMonday: string = getLatestMonday();
+    const path = CONFIG_FILE_PATH;
+    let artworkFileName: string = `artwork_of_week_${latestMonday}.json`;
+    if (!existsSync(path + artworkFileName)) {
+      Logger.error(`there is no file : ${path + artworkFileName}`);
+      artworkFileName = `artwork_of_week_default.json`;
+    }
+
+    return loadObjectFromJSON<WeeklyArtWorkSet>(path + artworkFileName);
+  }
+
+  @Get('init')
+  async initFile(): Promise<string> {
+    const latestMonday: string = getLatestMonday();
+    const artworkFileName: string = `artwork_of_week_${latestMonday}.json`;
+    const bucketName = process.env[AWS_BUCKET] || 'no bucket';
+    const prefixKey = process.env[AWS_INIT_FILE_KEY_PREFIX];
+
+    try {
+      await this.s3Service.downloadFile(
+        bucketName,
+        prefixKey + artworkFileName,
+        CONFIG_FILE_PATH + artworkFileName,
+      );
+
+      return 'success init';
+    } catch (err: unknown) {
+      throw new ServiceException(
+        'EXTERNAL_SERVICE_FAILED',
+        'INTERNAL_SERVER_ERROR',
+        `${this.initFile.name}() failed. need to check config`,
+        {
+          cause: err,
+        },
+      );
+    }
   }
 }
