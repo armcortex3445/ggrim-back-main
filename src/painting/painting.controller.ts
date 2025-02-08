@@ -119,8 +119,8 @@ export class PaintingController {
   -
   */
 
-  @Get('art_of_week')
-  async getWeeklyArtData() {
+  @Get('artwork_of_week')
+  async getWeeklyArtworkData() {
     const latestMonday: string = getLatestMonday();
     const path = CONFIG_FILE_PATH;
     let artworkFileName: string = `artwork_of_week_${latestMonday}.json`;
