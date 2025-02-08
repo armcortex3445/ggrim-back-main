@@ -3,13 +3,13 @@ name: Create and publish a Docker image to Docker Hub, Deploy to Cloudtype
 on:
   push:
     branches:
-      - init_docker
+      - "**"
 
 env:
   IMAGE_NAME: backend
-  NAMESPACE_NAME : andyjm7739
-  PROJECT_NAME : ggrim
-  SERVICE_NAME : ggrim-back-main
+  # NAMESPACE_NAME : andyjm7739
+  # PROJECT_NAME : ggrim
+  # SERVICE_NAME : ggrim-back-main
 
 jobs:
   build-and-push-image:
@@ -40,7 +40,7 @@ jobs:
           context: .
           push: true
           build-args : |
-            GPG_TOKEN=${{ secrets.ENV_PRODUCTION_GPG }}
+            GPG_TOKEN=${{ secrets.GPG_TOKEN }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 

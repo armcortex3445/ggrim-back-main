@@ -52,28 +52,12 @@ FROM node:${NODE_VERSION} AS init
 ARG WORK_DIR="app"
 
 
-
-# 필요한 패키지 설치
-# RUN apk update && \
-#     apk add --no-cache python3 py3-pip
-
-# # 가상 환경 생성 및 활성화
-# RUN python3 -m venv /venv
-
-# # 가상 환경 활성화 후 awscli 설치
-# RUN /venv/bin/pip install awscli --upgrade
-
-# PATH 환경 변수 설정
-# ENV PATH=/venv/bin:$PATH
-
 # AWS CLI 설치 (apk 사용)
-RUN apk update && \
-    apk add --no-cache aws-cli
+# RUN apk update && \
+#     apk add --no-cache aws-cli
 
-# AWS CLI 버전 확인
-RUN aws --version
-
-#TODOconrtab 어플리케이션 설치
+# # AWS CLI 버전 확인
+# RUN aws --version
 
 #디렉토리 복사
 COPY --chown=node:node --from=build-completor /${WORK_DIR} /${WORK_DIR}
